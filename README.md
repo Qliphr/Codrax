@@ -4,27 +4,27 @@
 
 # Codrax
 
-Cockpit d'orchestration desktop pour les vibe coders utilisant Claude Code.
+Desktop orchestration cockpit for vibe coders using Claude Code.
 
-Codrax relie un Kanban à des terminaux natifs : tu crées une tâche, tu la glisses dans une colonne, un agent AI (Claude Code, Codex, Kimi…) démarre automatiquement dans un terminal dédié. Quand la tâche est terminée, commit git automatique.
+Codrax links a Kanban board to native terminals: create a task, drag it into a column, an AI agent (Claude Code, Codex, Kimi…) starts automatically in a dedicated terminal. When the task is done, automatic git commit.
 
-## Ce que Codrax n'est pas
+## What Codrax is not
 
-- Pas un IDE — Claude Code s'occupe de l'édition de code
-- Pas un chat AI custom — les agents tournent dans des terminaux natifs via CLI
-- Pas un concurrent direct à Cursor ou Windsurf
+- Not an IDE — Claude Code handles code editing
+- Not a custom AI chat — agents run in native terminals via CLI
+- Not a direct competitor to Cursor or Windsurf
 
-## Ce que Codrax est
+## What Codrax is
 
-- Un Kanban intelligent lié à des terminaux PTY natifs
-- Un orchestrateur de pipelines d'agents AI (Codex → Claude Code → Kimi → commit)
-- Un outil de visualisation de l'avancement d'un projet vibe coding
+- A smart Kanban linked to native PTY terminals
+- An orchestrator for AI agent pipelines (Codex → Claude Code → Kimi → commit)
+- A tool to visualize progress on a vibe coding project
 
-## Stack technique
+## Tech stack
 
-| Composant | Choix |
+| Component | Choice |
 |---|---|
-| App desktop | Tauri 2 (Rust + WebView) |
+| Desktop app | Tauri 2 (Rust + WebView) |
 | Frontend | React 19 + TypeScript + Vite |
 | Styling | Tailwind v4 + shadcn/ui |
 | State | Zustand |
@@ -32,27 +32,27 @@ Codrax relie un Kanban à des terminaux natifs : tu crées une tâche, tu la gli
 | Terminal UI | @xterm/xterm + @xterm/addon-webgl |
 | Terminal PTY | portable-pty (Rust) |
 | Git | git2 (Rust) |
-| Auth + licences | Supabase |
-| Paiements | Polar.sh |
+| Auth + licensing | Supabase |
+| Payments | Polar.sh |
 
-## Pipeline par défaut
+## Default pipeline
 
 ```
-Codex (réflexion/plan) → Claude Code (build) → Kimi (review) → git commit
+Codex (thinking/plan) → Claude Code (build) → Kimi (review) → git commit
 ```
 
-Chaque projet peut définir son propre pipeline par défaut ; chaque carte peut l'override.
+Each project can define its own default pipeline; each card can override it.
 
-## OS supportés
+## Supported OS
 
-macOS (cible principale) · Windows · Linux (best effort)
+macOS (primary target) · Windows · Linux (best effort)
 
-## Statut
+## Status
 
-Projet en développement actif — voir les priorités MVP dans la documentation interne du projet.
+Actively in development — see MVP priorities in the project's internal documentation.
 
-## Licence
+## License
 
-Functional Source License, Version 1.1, MIT Future License (FSL-1.1-MIT) — voir [LICENSE](LICENSE).
+Functional Source License, Version 1.1, MIT Future License (FSL-1.1-MIT) — see [LICENSE](LICENSE).
 
-En résumé : le code source est disponible et modifiable librement, mais il est interdit de l'utiliser pour lancer un produit concurrent pendant 2 ans à partir de chaque version publiée. Passé ce délai, chaque version bascule automatiquement sous licence MIT.
+In short: source code is freely available and modifiable, but using it to launch a competing product is prohibited for 2 years from each release. After that, each version automatically converts to MIT license.
