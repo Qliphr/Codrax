@@ -1,16 +1,20 @@
-# VibeOS
+<p align="center">
+  <img src="logo/icon.png" alt="Codrax logo" width="120" />
+</p>
+
+# Codrax
 
 Cockpit d'orchestration desktop pour les vibe coders utilisant Claude Code.
 
-VibeOS relie un Kanban à des terminaux natifs : tu crées une tâche, tu la glisses dans une colonne, un agent AI (Claude Code, Codex, Kimi…) démarre automatiquement dans un terminal dédié. Quand la tâche est terminée, commit git automatique.
+Codrax relie un Kanban à des terminaux natifs : tu crées une tâche, tu la glisses dans une colonne, un agent AI (Claude Code, Codex, Kimi…) démarre automatiquement dans un terminal dédié. Quand la tâche est terminée, commit git automatique.
 
-## Ce que VibeOS n'est pas
+## Ce que Codrax n'est pas
 
 - Pas un IDE — Claude Code s'occupe de l'édition de code
 - Pas un chat AI custom — les agents tournent dans des terminaux natifs via CLI
 - Pas un concurrent direct à Cursor ou Windsurf
 
-## Ce que VibeOS est
+## Ce que Codrax est
 
 - Un Kanban intelligent lié à des terminaux PTY natifs
 - Un orchestrateur de pipelines d'agents AI (Codex → Claude Code → Kimi → commit)
