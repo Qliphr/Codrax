@@ -1,0 +1,78 @@
+Functional Source License, Version 1.1, MIT Future License
+
+Abbreviation: FSL-1.1-MIT
+
+Licensor:            Alexandre (alexandre@wisk.digital)
+Software:            VibeOS
+License Date:        2026-07-04
+Change Date:         2028-07-04
+Change License:      MIT
+
+## Terms
+
+The Licensor hereby grants you the right to copy, modify, create derivative
+works, redistribute, and make non-production use of the Software. The
+Licensor may make an Additional Use Grant, above, permitting limited
+production use.
+
+Effective on the Change Date, or the fourth anniversary of the first access
+to the Software under this License, whichever comes first, the Licensor
+hereby grants you rights under the terms of the Change License, and the
+rights granted in the paragraph above terminate.
+
+If your use of the Software does not comply with the requirements currently
+in effect as described in this License, you must purchase a commercial
+license from the Licensor, its affiliated entities, or authorized
+resellers, or you must refrain from using the Software.
+
+All copies of the original and modified Software require prominent display
+of this License. You must strictly comply with all use restrictions
+contained in the Additional Use Grant, and you must not remove, alter, or
+obscure this License.
+
+If you have a valid license from Licensor for the use of the Software, your
+use of the Software will be governed by the terms of that license. Subject
+to the foregoing sentence, by using the Software, you are agreeing to be
+bound by this License.
+
+If you do not agree to this License, you must refrain from using the
+Software. If you develop enhancements to the Software that you would like
+to include in the Software, you agree to grant the Licensor a non-exclusive,
+irrevocable, transferable, royalty-free, worldwide, perpetual license to
+incorporate all enhancements and to release them under the terms of this
+License.
+
+This License does not grant you any right in any trademark or logo of
+Licensor or its affiliates.
+
+## Definitions
+
+Production use means, without limitation, use for any purposes that
+contribute, directly or indirectly, to any revenue-generating activities or
+that provide any tangible benefit to a third party.
+
+Additional Use Grant: You may make production use of the Software, provided
+your use does not include offering the Software to third parties on a
+hosted or embedded basis in order to compete with VibeOS's paid product
+offering.
+
+TO THE EXTENT PERMITTED BY APPLICABLE LAW, THE SOFTWARE IS PROVIDED ON AN
+"AS IS" BASIS, AND LICENSOR DISCLAIMS ANY AND ALL WARRANTIES OF ANY KIND,
+WHETHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, NONINFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE. TO
+THE EXTENT PERMITTED BY APPLICABLE LAW, IN NO EVENT WILL LICENSOR BE LIABLE
+TO YOU ON ANY LEGAL THEORY (INCLUDING, WITHOUT LIMITATION, NEGLIGENCE) FOR
+ANY DIRECT, SPECIAL, INDIRECT, INCIDENTAL, CONSEQUENTIAL, PUNITIVE,
+EXEMPLARY, OR OTHER LOSSES, COSTS, EXPENSES, OR DAMAGES ARISING OUT OF THIS
+LICENSE OR USE OF THE SOFTWARE, EVEN IF LICENSOR HAS BEEN ADVISED OF THE
+POSSIBILITY OF SUCH LOSSES, COSTS, EXPENSES, OR DAMAGES.
+
+## Notices
+
+The Functional Source License is not an Open Source license. However, the
+Change License is FSL's benefit to the open-source community, ensuring
+that eventually, every FSL-licensed work will become available under an
+open-source license (the Change License) within a maximum of two years.
+
+For more information on the license, please visit the FSL FAQ at
+https://fsl.software/
