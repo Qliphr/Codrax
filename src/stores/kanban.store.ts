@@ -19,6 +19,7 @@ interface KanbanState {
   addCard: (input: NewCardInput) => void;
   setCardTerminal: (cardId: string, terminalId: string | null) => void;
   setPipelineStepState: (cardId: string, stepIndex: number, state: PipelineStepState) => void;
+  setBaselinePaths: (cardId: string, paths: string[] | null) => void;
 }
 
 function persist(workspaceId: string, cards: Card[]) {
@@ -101,6 +102,14 @@ export const useKanbanStore = create<KanbanState>((set, get) => ({
       pipeline[stepIndex] = state;
       return { ...c, pipeline };
     });
+    set({ cards: nextCards });
+    persist(workspaceId, nextCards);
+  },
+
+  setBaselinePaths: (cardId, paths) => {
+    const { workspaceId, cards } = get();
+    if (!workspaceId) return;
+    const nextCards = cards.map((c) => (c.id === cardId ? { ...c, baselinePaths: paths } : c));
     set({ cards: nextCards });
     persist(workspaceId, nextCards);
   },

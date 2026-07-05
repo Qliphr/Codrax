@@ -11,12 +11,34 @@ interface WorkspaceListProps {
   onAdd: () => void;
   onRelocate: (id: string) => void;
   onRemove: (id: string) => void;
+  onRename: (id: string, name: string) => void;
 }
 
 interface ContextMenuState {
   id: string;
   x: number;
   y: number;
+}
+
+function PencilIcon() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+      <path d="M15 5l4 4" />
+    </svg>
+  );
+}
+
+function TrashIcon() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 6h18" />
+      <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+      <path d="M10 11v6" />
+      <path d="M14 11v6" />
+    </svg>
+  );
 }
 
 export function WorkspaceList({
@@ -28,8 +50,10 @@ export function WorkspaceList({
   onAdd,
   onRelocate,
   onRemove,
+  onRename,
 }: WorkspaceListProps) {
   const [menu, setMenu] = useState<ContextMenuState | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!menu) return;
@@ -93,12 +117,14 @@ export function WorkspaceList({
           );
         }
 
+        const editing = editingId === ws.id;
+
         return (
           <div
             key={ws.id}
-            onClick={() => onSelect(ws.id)}
+            onClick={() => !editing && onSelect(ws.id)}
             onContextMenu={(e) => openMenu(e, ws)}
-            className="flex cursor-pointer items-center gap-2.5 rounded-lg px-3 py-2.5 text-[15px] hover:bg-[#2C2725]"
+            className="group flex cursor-pointer items-center gap-2.5 rounded-lg px-3 py-2.5 text-[15px] hover:bg-[#2C2725]"
             style={{
               color: active ? COLORS.textPrimary : COLORS.textSecondary,
               background: active ? "#2C2725" : "transparent",
@@ -106,16 +132,74 @@ export function WorkspaceList({
             }}
           >
             <span className="h-2 w-2 flex-none rounded-sm" style={{ background: ws.dot }} />
-            <span className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap">{ws.name}</span>
-            <span
-              className="min-w-[22px] rounded-md px-2 py-[3px] text-center font-sans text-xs"
-              style={{
-                color: active ? COLORS.accent : COLORS.textMuted,
-                background: active ? accentDim() : COLORS.bgSurface,
-              }}
-            >
-              {counts[ws.id] ?? 0}
-            </span>
+            {editing ? (
+              <input
+                autoFocus
+                defaultValue={ws.name}
+                onClick={(e) => e.stopPropagation()}
+                onFocus={(e) => e.currentTarget.select()}
+                onKeyDown={(e) => {
+                  e.stopPropagation();
+                  if (e.key === "Enter") {
+                    onRename(ws.id, e.currentTarget.value);
+                    setEditingId(null);
+                  } else if (e.key === "Escape") {
+                    setEditingId(null);
+                  }
+                }}
+                onBlur={(e) => {
+                  onRename(ws.id, e.currentTarget.value);
+                  setEditingId(null);
+                }}
+                className="min-w-0 flex-1 rounded px-1 py-0.5 text-[13px] outline-none"
+                style={{ background: COLORS.bgSurface, border: `1px solid ${COLORS.borderDefault}`, color: COLORS.textPrimary }}
+              />
+            ) : (
+              <span className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap">{ws.name}</span>
+            )}
+            {!editing && (
+              <>
+                <span
+                  className="min-w-[22px] rounded-md px-2 py-[3px] text-center font-sans text-xs group-hover:hidden"
+                  style={{
+                    color: active ? COLORS.accent : COLORS.textMuted,
+                    background: active ? accentDim() : COLORS.bgSurface,
+                  }}
+                >
+                  {counts[ws.id] ?? 0}
+                </span>
+                <div className="hidden flex-none items-center gap-0.5 group-hover:flex">
+                  <button
+                    type="button"
+                    aria-label="Rename workspace"
+                    title="Rename workspace"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setEditingId(ws.id);
+                    }}
+                    className="flex h-5 w-5 items-center justify-center rounded hover:bg-[#3D3733]"
+                    style={{ color: COLORS.textMuted }}
+                  >
+                    <PencilIcon />
+                  </button>
+                  <button
+                    type="button"
+                    aria-label="Delete workspace"
+                    title="Delete workspace"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onRemove(ws.id);
+                    }}
+                    className="flex h-5 w-5 items-center justify-center rounded hover:bg-[#3D3733]"
+                    style={{ color: COLORS.textMuted }}
+                    onMouseEnter={(e) => (e.currentTarget.style.color = "#FF4757")}
+                    onMouseLeave={(e) => (e.currentTarget.style.color = COLORS.textMuted)}
+                  >
+                    <TrashIcon />
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         );
       })}

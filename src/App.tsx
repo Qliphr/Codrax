@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { COLORS } from "@/lib/theme";
-import { autoCommit, checkGitIdentity, openPreview } from "@/lib/tauri";
+import { autoCommit, checkGitIdentity, gitChangedPaths, openPreview } from "@/lib/tauri";
 import { timeAgo } from "@/lib/time";
 import type { Card, ColumnKey, Workspace } from "@/lib/types";
 import { TopBar } from "@/components/Layout/TopBar";
@@ -36,8 +36,9 @@ export default function App() {
     loadDemoWorkspaces,
     removeWorkspace,
     relocateWorkspace,
+    renameWorkspace,
   } = useWorkspaceStore();
-  const { cards, hydrate: hydrateKanban, moveCard, addCard } = useKanbanStore();
+  const { cards, hydrate: hydrateKanban, moveCard, addCard, setBaselinePaths } = useKanbanStore();
   const {
     startAgent,
     startFreeTerminal,
@@ -85,7 +86,11 @@ export default function App() {
       const isNewTaskShortcut = (e.metaKey || e.ctrlKey) && !e.shiftKey && e.key.toLowerCase() === "t";
       if (isNewTaskShortcut) {
         e.preventDefault();
-        setNewTaskColumn("todo");
+        if (view === "terminals") {
+          handleNewTerminal();
+        } else {
+          setNewTaskColumn("todo");
+        }
       }
       const isViewSwitchShortcut = e.shiftKey && e.key === "Tab";
       if (isViewSwitchShortcut) {
@@ -96,7 +101,7 @@ export default function App() {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [workspace]);
+  }, [workspace, view]);
 
   const activeCount = useMemo(() => cards.filter((c) => c.pipeline.includes("active")).length, [cards]);
 
@@ -130,9 +135,25 @@ export default function App() {
 
   async function runAutoCommit(card: Card) {
     if (!workspace) return;
+
+    // Scope the commit to what this task actually touched: anything changed now that
+    // wasn't already dirty at the task's baseline (captured when it went in-progress).
+    // No baseline (e.g. repo had no git, or task was created before this existed) falls
+    // back to committing everything, same as before.
+    let scope: string[] | undefined;
+    if (card.baselinePaths) {
+      try {
+        const current = await gitChangedPaths(workspace.path);
+        const baseline = new Set(card.baselinePaths);
+        scope = current.filter((p) => !baseline.has(p));
+      } catch {
+        scope = undefined;
+      }
+    }
+
     let result;
     try {
-      result = await autoCommit(workspace.path, card.title);
+      result = await autoCommit(workspace.path, card.title, scope);
     } catch (err) {
       pushToast({ kind: "error", message: `Could not commit "${card.title}": ${String(err)}` });
       return;
@@ -173,6 +194,11 @@ export default function App() {
 
     if (nextStatus === "in-progress" && !card.terminalId) {
       void startAgent(card, workspace?.path);
+      if (workspace) {
+        gitChangedPaths(workspace.path)
+          .then((paths) => setBaselinePaths(cardId, paths))
+          .catch(() => setBaselinePaths(cardId, null));
+      }
     }
     if (nextStatus === "done") {
       scheduleDoneCleanup(card);
@@ -296,6 +322,7 @@ export default function App() {
           onAddWorkspace={() => void handleAddWorkspace()}
           onRelocateWorkspace={(id) => void relocateWorkspace(id)}
           onRemoveWorkspace={removeWorkspace}
+          onRenameWorkspace={renameWorkspace}
           view={view}
           onSetView={setView}
         />

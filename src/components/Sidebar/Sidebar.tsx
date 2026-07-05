@@ -20,6 +20,7 @@ interface SidebarProps {
   onAddWorkspace: () => void;
   onRelocateWorkspace: (id: string) => void;
   onRemoveWorkspace: (id: string) => void;
+  onRenameWorkspace: (id: string, name: string) => void;
   view: BoardView;
   onSetView: (view: BoardView) => void;
 }
@@ -35,6 +36,7 @@ export function Sidebar({
   onAddWorkspace,
   onRelocateWorkspace,
   onRemoveWorkspace,
+  onRenameWorkspace,
   view,
   onSetView,
 }: SidebarProps) {
@@ -94,6 +96,7 @@ export function Sidebar({
         onAdd={onAddWorkspace}
         onRelocate={onRelocateWorkspace}
         onRemove={onRemoveWorkspace}
+        onRename={onRenameWorkspace}
       />
 
       <div className="mt-1.5 border-t px-3 py-2" style={{ borderColor: COLORS.borderSubtle }}>

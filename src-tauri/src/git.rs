@@ -31,6 +31,28 @@ fn status_tag(status: git2::Status) -> Option<&'static str> {
     }
 }
 
+/// Paths currently changed (working tree + index) vs HEAD, tracked and untracked.
+/// Used to snapshot a baseline when a task starts, and to scope its commit to only
+/// what changed *after* that baseline (see `auto_commit`'s `scope` argument).
+fn collect_changed_paths(repo: &Repository) -> Result<Vec<String>, String> {
+    let mut opts = git2::StatusOptions::new();
+    opts.include_untracked(true);
+    let statuses = repo.statuses(Some(&mut opts)).map_err(|e| e.to_string())?;
+    Ok(statuses
+        .iter()
+        .filter_map(|entry| entry.path().ok().map(str::to_string))
+        .collect())
+}
+
+#[tauri::command]
+pub fn git_changed_paths(path: String) -> Result<Vec<String>, String> {
+    let repo = match Repository::open(&path) {
+        Ok(r) => r,
+        Err(_) => return Ok(vec![]),
+    };
+    collect_changed_paths(&repo)
+}
+
 fn compute_ahead(repo: &Repository) -> Option<usize> {
     let head = repo.head().ok()?;
     let local_oid = head.target()?;
@@ -85,17 +107,34 @@ pub enum CommitResponse {
     Failed { message: String },
 }
 
-/// `git add . && git commit -m message`. Never returns a hard error for ordinary git
-/// failures (missing identity, hooks, nothing staged) — those are business outcomes the
-/// caller surfaces as a toast, per the "never block the board on a git problem" rule.
+/// `git add . && git commit -m message`, or — when `scope` is given — stages only those
+/// paths (task-scoped commit: everything else left dirty for the user/other tasks).
+/// Never returns a hard error for ordinary git failures (missing identity, hooks, nothing
+/// staged) — those are business outcomes the caller surfaces as a toast, per the "never
+/// block the board on a git problem" rule.
 #[tauri::command]
-pub fn auto_commit(path: String, message: String) -> Result<CommitResponse, String> {
+pub fn auto_commit(path: String, message: String, scope: Option<Vec<String>>) -> Result<CommitResponse, String> {
     let repo = Repository::open(&path).map_err(|e| format!("not a git repo: {e}"))?;
 
     let mut index = repo.index().map_err(|e| e.to_string())?;
-    index
-        .add_all(["."].iter(), IndexAddOption::DEFAULT, None)
-        .map_err(|e| e.to_string())?;
+    match &scope {
+        None => {
+            index
+                .add_all(["."].iter(), IndexAddOption::DEFAULT, None)
+                .map_err(|e| e.to_string())?;
+        }
+        Some(paths) => {
+            for rel_path in paths {
+                let full_path = std::path::Path::new(&path).join(rel_path);
+                if full_path.exists() {
+                    index.add_path(std::path::Path::new(rel_path)).map_err(|e| e.to_string())?;
+                } else {
+                    // Ignore "not in index" — file may have never been staged (e.g. baseline noise).
+                    let _ = index.remove_path(std::path::Path::new(rel_path));
+                }
+            }
+        }
+    }
     index.write().map_err(|e| e.to_string())?;
 
     let tree_oid = index.write_tree().map_err(|e| e.to_string())?;
@@ -268,12 +307,36 @@ mod tests {
             GitStatusResponse::NotARepo => panic!("expected a repo"),
         }
 
-        let commit = auto_commit(path.clone(), "feat: add file.txt".to_string()).expect("commit ok");
+        let commit = auto_commit(path.clone(), "feat: add file.txt".to_string(), None).expect("commit ok");
         assert!(matches!(commit, CommitResponse::Committed { .. }));
 
         // Committing again with no further changes must be a non-error.
-        let second = auto_commit(path, "no-op".to_string()).expect("commit ok");
+        let second = auto_commit(path, "no-op".to_string(), None).expect("commit ok");
         assert!(matches!(second, CommitResponse::NothingToCommit));
+    }
+
+    #[test]
+    fn scoped_commit_only_stages_given_paths() {
+        let dir = init_test_repo();
+        let path = dir.path().to_string_lossy().to_string();
+
+        // Pre-existing dirty file, not part of the task's baseline diff — must stay unstaged.
+        fs::write(dir.path().join("unrelated.txt"), "pre-existing").expect("write file");
+        // File the task actually touched.
+        fs::write(dir.path().join("task.txt"), "task change").expect("write file");
+
+        let commit = auto_commit(path.clone(), "feat: scoped".to_string(), Some(vec!["task.txt".to_string()]))
+            .expect("commit ok");
+        assert!(matches!(commit, CommitResponse::Committed { .. }));
+
+        let status = git_status(path).expect("status ok");
+        match status {
+            GitStatusResponse::Ok { changes, .. } => {
+                assert!(changes.iter().any(|c| c.path == "unrelated.txt"), "unrelated file should stay dirty");
+                assert!(!changes.iter().any(|c| c.path == "task.txt"), "task file should be committed");
+            }
+            GitStatusResponse::NotARepo => panic!("expected a repo"),
+        }
     }
 
     #[test]
@@ -300,9 +363,9 @@ mod tests {
         let path = dir.path().to_string_lossy().to_string();
 
         fs::write(dir.path().join("a.txt"), "one").expect("write file");
-        let first = auto_commit(path.clone(), "feat: a".to_string()).expect("commit ok");
+        let first = auto_commit(path.clone(), "feat: a".to_string(), None).expect("commit ok");
         fs::write(dir.path().join("a.txt"), "two").expect("write file");
-        let second = auto_commit(path.clone(), "feat: b".to_string()).expect("commit ok");
+        let second = auto_commit(path.clone(), "feat: b".to_string(), None).expect("commit ok");
 
         let (first_oid, second_oid) = match (first, second) {
             (CommitResponse::Committed { oid: f }, CommitResponse::Committed { oid: s }) => (f, s),

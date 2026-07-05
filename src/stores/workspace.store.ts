@@ -16,6 +16,7 @@ interface WorkspaceState {
   loadDemoWorkspaces: () => void;
   removeWorkspace: (id: string) => void;
   relocateWorkspace: (id: string) => Promise<void>;
+  renameWorkspace: (id: string, name: string) => void;
 }
 
 function persist(workspaces: Workspace[]) {
@@ -101,6 +102,14 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
     const nextMissing = new Set(missingIds);
     nextMissing.delete(id);
     set({ workspaces: next, missingIds: nextMissing });
+    persist(next);
+  },
+
+  renameWorkspace: (id, name) => {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    const next = get().workspaces.map((w) => (w.id === id ? { ...w, name: trimmed } : w));
+    set({ workspaces: next });
     persist(next);
   },
 }));

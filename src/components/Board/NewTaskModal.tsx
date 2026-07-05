@@ -19,15 +19,6 @@ export function NewTaskModal({ open, initialColumn, onClose, onCreate }: NewTask
   const [column, setColumn] = useState<ColumnKey>(initialColumn);
   const { mounted, state } = usePresence(open, 160);
 
-  useEffect(() => {
-    if (!open) return;
-    const onKeyDown = (e: KeyboardEvent) => e.key === "Escape" && onClose();
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [open, onClose]);
-
-  if (!mounted) return null;
-
   const titleEmpty = title.trim().length === 0;
 
   function handleCreate() {
@@ -37,6 +28,18 @@ export function NewTaskModal({ open, initialColumn, onClose, onCreate }: NewTask
     setPriority("medium");
     setColumn(initialColumn);
   }
+
+  useEffect(() => {
+    if (!open) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+      if (e.key === "Enter" && !titleEmpty) handleCreate();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [open, onClose, titleEmpty, title, priority, column]);
+
+  if (!mounted) return null;
 
   return (
     <div

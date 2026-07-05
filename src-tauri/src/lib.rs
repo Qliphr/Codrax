@@ -27,6 +27,7 @@ pub fn run() {
             git::git_status,
             git::init_repo,
             git::auto_commit,
+            git::git_changed_paths,
             git::check_git_identity,
             git::git_log,
             preview::open_preview,

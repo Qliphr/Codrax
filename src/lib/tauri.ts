@@ -37,8 +37,14 @@ export type CommitResponse =
   | { kind: "committed"; oid: string }
   | { kind: "failed"; message: string };
 
-export function autoCommit(path: string, message: string): Promise<CommitResponse> {
-  return invoke("auto_commit", { path, message });
+export function autoCommit(path: string, message: string, scope?: string[]): Promise<CommitResponse> {
+  return invoke("auto_commit", { path, message, scope: scope ?? null });
+}
+
+/** Currently changed paths (tracked + untracked) vs HEAD — used to snapshot a task's
+ * baseline at start so its eventual commit can be scoped to what it actually touched. */
+export function gitChangedPaths(path: string): Promise<string[]> {
+  return invoke("git_changed_paths", { path });
 }
 
 export interface GitCommit {

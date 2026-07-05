@@ -26,6 +26,11 @@ export interface Card {
   pipeline: PipelineStepState[];
   terminalId: string | null;
   currentStep: number;
+  /** Git-changed paths snapshotted when the task entered "in-progress" — lets the
+   * eventual Done commit be scoped to only what this task touched. Null/absent means
+   * no baseline was captured (e.g. workspace has no git repo), so Done falls back to
+   * committing everything. */
+  baselinePaths?: string[] | null;
 }
 
 export interface WorkspaceSettings {
