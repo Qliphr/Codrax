@@ -21,8 +21,8 @@ export function WelcomeScreen({ onAddWorkspace, onLoadDemo }: WelcomeScreenProps
       <div className="flex flex-col gap-2.5">
         <div className="text-2xl font-semibold tracking-tight">Welcome to Codrax</div>
         <div className="max-w-md text-[13.5px] leading-relaxed" style={{ color: COLORS.textSecondary }}>
-          Open a local git repo to start orchestrating AI agents on a Kanban board — Codex, Claude, Kimi, one card at
-          a time.
+          Open a local git repo to start orchestrating AI agents on a Kanban board — Claude, Kimi, one card at a
+          time.
         </div>
       </div>
 

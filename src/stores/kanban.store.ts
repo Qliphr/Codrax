@@ -17,6 +17,7 @@ interface KanbanState {
   hydrate: (workspaceId: string) => Promise<void>;
   moveCard: (cardId: string, status: ColumnKey) => void;
   addCard: (input: NewCardInput) => void;
+  deleteCard: (cardId: string) => void;
   setCardTerminal: (cardId: string, terminalId: string | null) => void;
   setPipelineStepState: (cardId: string, stepIndex: number, state: PipelineStepState) => void;
   setBaselinePaths: (cardId: string, paths: string[] | null) => void;
@@ -76,11 +77,19 @@ export const useKanbanStore = create<KanbanState>((set, get) => ({
       priority: input.priority,
       status: input.status,
       project: workspaceId,
-      pipeline: ["idle", "idle", "idle", "idle"],
+      pipeline: ["idle", "idle", "idle"],
       terminalId: null,
       currentStep: 0,
     };
     const nextCards = [...cards, card];
+    set({ cards: nextCards });
+    persist(workspaceId, nextCards);
+  },
+
+  deleteCard: (cardId) => {
+    const { workspaceId, cards } = get();
+    if (!workspaceId) return;
+    const nextCards = cards.filter((c) => c.id !== cardId);
     set({ cards: nextCards });
     persist(workspaceId, nextCards);
   },

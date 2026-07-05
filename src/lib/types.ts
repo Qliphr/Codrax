@@ -4,7 +4,11 @@ export type ColumnKey = "todo" | "in-progress" | "in-review" | "done";
 
 export type PipelineStepState = "idle" | "active" | "done" | "failed";
 
-export const PIPELINE_STEP_NAMES = ["Codex", "Claude", "Kimi", "commit"] as const;
+export const PIPELINE_STEP_NAMES = ["Claude", "Kimi", "commit"] as const;
+
+/** Column → forced pipeline step: dropping a card here always (re)starts this agent. */
+export const CLAUDE_STEP_INDEX = PIPELINE_STEP_NAMES.indexOf("Claude");
+export const KIMI_STEP_INDEX = PIPELINE_STEP_NAMES.indexOf("Kimi");
 
 export const COLUMN_LABELS: Record<ColumnKey, string> = {
   todo: "To Do",

@@ -83,7 +83,12 @@ export function useTerminal({ terminalId, spawn, onExit, onCommandNotFound }: Us
             await invoke("write_pty", { terminalId, data: `${spawn.initialCommand}\n` });
           }
         } catch (err) {
-          term.write(`\r\n\x1b[31mfailed to start terminal: ${String(err)}\x1b[0m\r\n`);
+          const message = String(err);
+          // The PTY survives navigation away from the Terminals page (it's killed only on
+          // manual close / Done timeout / app exit) — remounting must reattach, not respawn.
+          if (!message.includes("already exists")) {
+            term.write(`\r\n\x1b[31mfailed to start terminal: ${message}\x1b[0m\r\n`);
+          }
         }
       }
     }

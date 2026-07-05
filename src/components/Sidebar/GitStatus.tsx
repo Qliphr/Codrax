@@ -1,6 +1,9 @@
+import { useState } from "react";
 import { COLORS, accentDim } from "@/lib/theme";
 import { initRepo, type GitChange } from "@/lib/tauri";
 import { useGitStatus } from "@/hooks/useGitStatus";
+import { CommitModal } from "./CommitModal";
+import { PushModal } from "./PushModal";
 
 const TAG_COLORS: Record<GitChange["tag"], string> = {
   M: "#FFD166",
@@ -14,6 +17,8 @@ interface GitStatusProps {
 
 export function GitStatus({ workspacePath }: GitStatusProps) {
   const { status, loading, refresh } = useGitStatus(workspacePath);
+  const [commitOpen, setCommitOpen] = useState(false);
+  const [pushOpen, setPushOpen] = useState(false);
 
   if (loading || !status) {
     return (
@@ -90,6 +95,44 @@ export function GitStatus({ workspacePath }: GitStatusProps) {
           </div>
         ))
       )}
+      <div className="mt-2.5 flex gap-1.5 px-1.5">
+        <button
+          onClick={() => setCommitOpen(true)}
+          disabled={changes.length === 0}
+          className="flex-1 rounded-md border py-1.5 font-sans text-[11px] font-semibold"
+          style={{
+            color: changes.length === 0 ? COLORS.textDim : COLORS.textSoft,
+            borderColor: COLORS.borderDefault,
+            cursor: changes.length === 0 ? "not-allowed" : "pointer",
+            opacity: changes.length === 0 ? 0.5 : 1,
+          }}
+        >
+          Commit
+        </button>
+        <button
+          onClick={() => setPushOpen(true)}
+          className="flex-1 rounded-md border py-1.5 font-sans text-[11px] font-semibold"
+          style={{ color: COLORS.accent, background: accentDim(), borderColor: COLORS.borderDefault }}
+        >
+          Push
+        </button>
+      </div>
+
+      <CommitModal
+        open={commitOpen}
+        workspacePath={workspacePath}
+        changes={changes}
+        onClose={() => setCommitOpen(false)}
+        onCommitted={refresh}
+      />
+      <PushModal
+        open={pushOpen}
+        workspacePath={workspacePath}
+        branch={branch}
+        ahead={ahead}
+        onClose={() => setPushOpen(false)}
+        onPushed={refresh}
+      />
     </div>
   );
 }

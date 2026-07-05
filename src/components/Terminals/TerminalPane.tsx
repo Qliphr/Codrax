@@ -1,5 +1,6 @@
+import { useEffect, useRef, useState } from "react";
 import { COLORS } from "@/lib/theme";
-import { PIPELINE_STEP_NAMES, type Card } from "@/lib/types";
+import { PIPELINE_STEP_NAMES, type Card, type ColumnKey } from "@/lib/types";
 import type { Pane } from "@/stores/terminal.store";
 import { useTerminal } from "@/hooks/useTerminal";
 import { PipelineChips } from "@/components/PipelineChips";
@@ -10,6 +11,7 @@ interface TerminalPaneProps {
   card: Card | undefined;
   onExit: (card: Card, exitCode: number) => void;
   onManualClose: (card: Card | null, terminalId: string) => void;
+  onMoveCard: (cardId: string, status: ColumnKey) => void;
 }
 
 function currentStepIndex(card: Card): number {
@@ -17,7 +19,7 @@ function currentStepIndex(card: Card): number {
   return idx < 0 ? card.pipeline.length - 1 : idx;
 }
 
-export function TerminalPane({ pane, card, onExit, onManualClose }: TerminalPaneProps) {
+export function TerminalPane({ pane, card, onExit, onManualClose, onMoveCard }: TerminalPaneProps) {
   if (!pane.terminalId) {
     return (
       <div
@@ -63,6 +65,7 @@ export function TerminalPane({ pane, card, onExit, onManualClose }: TerminalPane
       statusColor={statusColor}
       onExit={onExit}
       onManualClose={onManualClose}
+      onMoveCard={onMoveCard}
     />
   );
 }
@@ -75,11 +78,23 @@ interface TerminalPaneLiveProps {
   statusColor: string;
   onExit: (card: Card, exitCode: number) => void;
   onManualClose: (card: Card | null, terminalId: string) => void;
+  onMoveCard: (cardId: string, status: ColumnKey) => void;
 }
 
-function TerminalPaneLive({ card, pane, stepName, status, statusColor, onExit, onManualClose }: TerminalPaneLiveProps) {
+function TerminalPaneLive({ card, pane, stepName, status, statusColor, onExit, onManualClose, onMoveCard }: TerminalPaneLiveProps) {
   const terminalId = pane.terminalId as string;
   const pushToast = useToastStore((s) => s.push);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    function handleClickOutside(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false);
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [menuOpen]);
   const { containerRef } = useTerminal({
     terminalId,
     spawn: { cwd: pane.cwd ?? undefined, initialCommand: pane.initialCommand || undefined },
@@ -106,12 +121,48 @@ function TerminalPaneLive({ card, pane, stepName, status, statusColor, onExit, o
             {stepName}
           </span>
         )}
-        <span
-          className="rounded-md px-2 py-[2px] font-sans text-[9.5px] font-semibold tracking-wider"
-          style={{ color: statusColor, background: `${statusColor}1c`, border: `1px solid ${statusColor}44` }}
-        >
-          {status}
-        </span>
+        <div className="relative" ref={menuRef}>
+          <button
+            onClick={() => card && setMenuOpen((v) => !v)}
+            disabled={!card}
+            className="rounded-md px-2 py-[2px] font-sans text-[9.5px] font-semibold tracking-wider"
+            style={{
+              color: statusColor,
+              background: `${statusColor}1c`,
+              border: `1px solid ${statusColor}44`,
+              cursor: card ? "pointer" : "default",
+            }}
+          >
+            {status}
+          </button>
+          {menuOpen && card && (
+            <div
+              className="absolute right-0 top-full z-10 mt-1 w-36 overflow-hidden rounded-md border font-sans text-[11px] shadow-lg"
+              style={{ background: COLORS.bgTermHeader, borderColor: "#332D2A" }}
+            >
+              <button
+                onClick={() => {
+                  onMoveCard(card.id, "todo");
+                  setMenuOpen(false);
+                }}
+                className="block w-full px-3 py-2 text-left"
+                style={{ color: "#E8E2D8" }}
+              >
+                → Move to To Do
+              </button>
+              <button
+                onClick={() => {
+                  onMoveCard(card.id, "done");
+                  setMenuOpen(false);
+                }}
+                className="block w-full border-t px-3 py-2 text-left"
+                style={{ color: "#E8E2D8", borderColor: "#332D2A" }}
+              >
+                → Move to Done
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       <div ref={containerRef} className="min-h-0 flex-1 px-2 py-1.5" style={{ background: COLORS.bgTermBody }} />

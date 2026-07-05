@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { COLORS, PRIORITY_COLORS, accentBorder, accentDim, withAlpha } from "@/lib/theme";
 import { COLUMN_KEYS, COLUMN_LABELS, type ColumnKey, type Priority } from "@/lib/types";
 import type { NewCardInput } from "@/stores/kanban.store";
@@ -18,8 +18,16 @@ export function NewTaskModal({ open, initialColumn, onClose, onCreate }: NewTask
   const [priority, setPriority] = useState<Priority>("medium");
   const [column, setColumn] = useState<ColumnKey>(initialColumn);
   const { mounted, state } = usePresence(open, 160);
+  const titleRef = useRef<HTMLTextAreaElement>(null);
 
   const titleEmpty = title.trim().length === 0;
+
+  function resizeTitle() {
+    const el = titleRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight}px`;
+  }
 
   function handleCreate() {
     if (titleEmpty) return;
@@ -28,6 +36,10 @@ export function NewTaskModal({ open, initialColumn, onClose, onCreate }: NewTask
     setPriority("medium");
     setColumn(initialColumn);
   }
+
+  useEffect(() => {
+    if (open) resizeTitle();
+  }, [open, title]);
 
   useEffect(() => {
     if (!open) return;
@@ -74,11 +86,19 @@ export function NewTaskModal({ open, initialColumn, onClose, onCreate }: NewTask
             <label className="font-sans text-[10px] uppercase tracking-wider" style={{ color: COLORS.textMuted }}>
               Title
             </label>
-            <input
-              className="vos-input"
+            <textarea
+              ref={titleRef}
+              className="vos-input resize-none overflow-hidden"
+              rows={1}
               placeholder="e.g. Add password reset flow"
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={(e) => {
+                setTitle(e.target.value);
+                resizeTitle();
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") e.preventDefault();
+              }}
               autoFocus
             />
           </div>

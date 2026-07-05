@@ -263,6 +263,40 @@ pub fn git_log(path: String) -> Result<GitLogResponse, String> {
     Ok(GitLogResponse::Ok { commits })
 }
 
+#[derive(Debug, Serialize)]
+#[serde(tag = "kind", rename_all = "camelCase")]
+pub enum PushResponse {
+    Ok { message: String },
+    Failed { message: String },
+}
+
+/// Shells out to the system `git` binary rather than driving libgit2's push directly —
+/// auth (SSH agent, credential helper, tokens) is whatever the user already has configured
+/// for their own `git push`, so we don't reimplement credential callbacks.
+#[tauri::command]
+pub fn git_push(path: String) -> Result<PushResponse, String> {
+    let run = |args: &[&str]| {
+        std::process::Command::new("git").args(args).current_dir(&path).output()
+    };
+
+    let output = run(&["push"]).map_err(|e| e.to_string())?;
+    if output.status.success() {
+        return Ok(PushResponse::Ok { message: String::from_utf8_lossy(&output.stderr).trim().to_string() });
+    }
+
+    let stderr = String::from_utf8_lossy(&output.stderr).to_string();
+    if stderr.contains("has no upstream branch") || stderr.contains("set-upstream") {
+        let retry = run(&["push", "--set-upstream", "origin", "HEAD"]).map_err(|e| e.to_string())?;
+        return Ok(if retry.status.success() {
+            PushResponse::Ok { message: String::from_utf8_lossy(&retry.stderr).trim().to_string() }
+        } else {
+            PushResponse::Failed { message: String::from_utf8_lossy(&retry.stderr).trim().to_string() }
+        });
+    }
+
+    Ok(PushResponse::Failed { message: stderr.trim().to_string() })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

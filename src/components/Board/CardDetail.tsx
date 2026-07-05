@@ -8,9 +8,10 @@ interface CardDetailProps {
   onMoveCard: (cardId: string, status: ColumnKey) => void;
   onAdvance: (card: Card) => void;
   onOpenInTerminal: (card: Card) => void;
+  onDelete: (card: Card) => void;
 }
 
-export function CardDetail({ card, onClose, onMoveCard, onAdvance, onOpenInTerminal }: CardDetailProps) {
+export function CardDetail({ card, onClose, onMoveCard, onAdvance, onOpenInTerminal, onDelete }: CardDetailProps) {
   const { mounted, state } = usePresence(card !== null, 160);
   if (!mounted || !card) return null;
 
@@ -38,6 +39,14 @@ export function CardDetail({ card, onClose, onMoveCard, onAdvance, onOpenInTermi
             TASK · {card.id}
           </span>
           <div className="flex-1" />
+          <button
+            onClick={() => onDelete(card)}
+            title="Delete task"
+            className="flex h-7 w-7 items-center justify-center rounded-md border text-sm"
+            style={{ borderColor: COLORS.borderDefault, color: "#FF4757" }}
+          >
+            🗑
+          </button>
           <button
             onClick={onClose}
             className="flex h-7 w-7 items-center justify-center rounded-md border text-sm"

@@ -5,7 +5,6 @@ import { useTerminalStore } from "@/stores/terminal.store";
 import { PIPELINE_STEP_NAMES, type Card } from "@/lib/types";
 
 const STEP_COMMANDS: Record<(typeof PIPELINE_STEP_NAMES)[number], string> = {
-  Codex: 'codex "{task}"',
   Claude: 'claude "{task}"',
   Kimi: 'kimi review "{task}"',
   commit: 'git add . && git commit -m "{task}"',
@@ -35,8 +34,8 @@ export function usePipeline() {
   );
 
   const startAgent = useCallback(
-    async (card: Card, cwd?: string) => {
-      const stepIdx = currentStepIndex(card);
+    async (card: Card, cwd?: string, stepIdxOverride?: number) => {
+      const stepIdx = stepIdxOverride ?? currentStepIndex(card);
       const stepName = PIPELINE_STEP_NAMES[stepIdx];
       const template = STEP_COMMANDS[stepName];
       const terminalId = crypto.randomUUID();

@@ -69,6 +69,12 @@ export function checkGitIdentity(): Promise<boolean> {
   return invoke("check_git_identity");
 }
 
+export type PushResponse = { kind: "ok"; message: string } | { kind: "failed"; message: string };
+
+export function gitPush(path: string): Promise<PushResponse> {
+  return invoke("git_push", { path });
+}
+
 export interface LoadWorkspacesResponse {
   workspaces: Workspace[];
   recoveredFromCorruption: boolean;

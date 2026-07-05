@@ -1,5 +1,5 @@
 import { COLORS, accentBorder, accentDim } from "@/lib/theme";
-import type { Card } from "@/lib/types";
+import type { Card, ColumnKey } from "@/lib/types";
 import { useTerminalStore } from "@/stores/terminal.store";
 import { TerminalPane } from "./TerminalPane";
 
@@ -8,9 +8,10 @@ interface TerminalGridProps {
   onExit: (card: Card, exitCode: number) => void;
   onManualClose: (card: Card | null, terminalId: string) => void;
   onNewTerminal: () => void;
+  onMoveCard: (cardId: string, status: ColumnKey) => void;
 }
 
-export function TerminalGrid({ cards, onExit, onManualClose, onNewTerminal }: TerminalGridProps) {
+export function TerminalGrid({ cards, onExit, onManualClose, onNewTerminal, onMoveCard }: TerminalGridProps) {
   const panes = useTerminalStore((s) => s.panes);
   const runningCount = panes.filter((p) => p.terminalId !== null).length;
   const hasIdlePane = panes.some((p) => p.terminalId === null);
@@ -49,6 +50,7 @@ export function TerminalGrid({ cards, onExit, onManualClose, onNewTerminal }: Te
             card={cards.find((c) => c.id === pane.cardId)}
             onExit={onExit}
             onManualClose={onManualClose}
+            onMoveCard={onMoveCard}
           />
         ))}
       </div>

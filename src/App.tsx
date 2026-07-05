@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { COLORS } from "@/lib/theme";
 import { autoCommit, checkGitIdentity, gitChangedPaths, openPreview } from "@/lib/tauri";
 import { timeAgo } from "@/lib/time";
-import type { Card, ColumnKey, Workspace } from "@/lib/types";
+import { CLAUDE_STEP_INDEX, KIMI_STEP_INDEX, type Card, type ColumnKey, type Workspace } from "@/lib/types";
 import { TopBar } from "@/components/Layout/TopBar";
 import { WelcomeScreen } from "@/components/Layout/WelcomeScreen";
 import { Sidebar, type BoardView } from "@/components/Sidebar/Sidebar";
@@ -17,6 +17,7 @@ import { useToastStore } from "@/stores/toast.store";
 import { useWorkspaceStore } from "@/stores/workspace.store";
 import { useNotificationStore } from "@/stores/notification.store";
 import { usePipeline } from "@/hooks/usePipeline";
+import { useAutoUpdate } from "@/hooks/useAutoUpdate";
 
 export default function App() {
   const [activeWorkspaceId, setActiveWorkspaceId] = useState<string | null>(null);
@@ -38,7 +39,7 @@ export default function App() {
     relocateWorkspace,
     renameWorkspace,
   } = useWorkspaceStore();
-  const { cards, hydrate: hydrateKanban, moveCard, addCard, setBaselinePaths } = useKanbanStore();
+  const { cards, hydrate: hydrateKanban, moveCard, addCard, deleteCard, setBaselinePaths } = useKanbanStore();
   const {
     startAgent,
     startFreeTerminal,
@@ -51,6 +52,8 @@ export default function App() {
   } = usePipeline();
   const pushToast = useToastStore((s) => s.push);
   const { notifications, push: pushNotification, markAllRead } = useNotificationStore();
+
+  useAutoUpdate();
 
   useEffect(() => {
     hydrateWorkspaces();
@@ -184,7 +187,7 @@ export default function App() {
       cancelDoneCleanup(cardId);
     }
 
-    if (card.status === "in-progress" && nextStatus !== "in-progress" && card.terminalId) {
+    if ((card.status === "in-progress" || card.status === "in-review") && card.terminalId) {
       const confirmed = window.confirm("Stop the running agent for this task?");
       if (!confirmed) return;
       void stopAgent(card);
@@ -192,13 +195,17 @@ export default function App() {
 
     moveCard(cardId, nextStatus);
 
-    if (nextStatus === "in-progress" && !card.terminalId) {
-      void startAgent(card, workspace?.path);
+    // Column drives which agent runs: In Progress always (re)starts Claude, In Review always (re)starts Kimi.
+    if (nextStatus === "in-progress") {
+      void startAgent(card, workspace?.path, CLAUDE_STEP_INDEX);
       if (workspace) {
         gitChangedPaths(workspace.path)
           .then((paths) => setBaselinePaths(cardId, paths))
           .catch(() => setBaselinePaths(cardId, null));
       }
+    }
+    if (nextStatus === "in-review") {
+      void startAgent(card, workspace?.path, KIMI_STEP_INDEX);
     }
     if (nextStatus === "done") {
       scheduleDoneCleanup(card);
@@ -218,6 +225,15 @@ export default function App() {
   function handleManualClose(card: Card | null, terminalId: string) {
     if (card) void stopAgent(card);
     else void killTerminal(terminalId);
+  }
+
+  function handleDeleteCard(card: Card) {
+    const confirmed = window.confirm(`Delete task "${card.title}"? This cannot be undone.`);
+    if (!confirmed) return;
+    if (card.terminalId) void stopAgent(card);
+    cancelDoneCleanup(card.id);
+    setSelectedCardId(null);
+    deleteCard(card.id);
   }
 
   function handleOpenInTerminal(card: Card) {
@@ -342,6 +358,7 @@ export default function App() {
               onExit={handleAgentExitEvent}
               onManualClose={handleManualClose}
               onNewTerminal={handleNewTerminal}
+              onMoveCard={handleMoveCard}
             />
           )}
         </div>
@@ -363,6 +380,7 @@ export default function App() {
         onMoveCard={handleMoveCard}
         onAdvance={(card) => void advance(card, workspace.path)}
         onOpenInTerminal={handleOpenInTerminal}
+        onDelete={handleDeleteCard}
       />
 
       <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} />
