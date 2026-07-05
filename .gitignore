@@ -3,3 +3,19 @@
 ### Claude Code
 .claude
 .design
+.Terax
+
+### Node
+node_modules
+dist
+dist-node
+*.tsbuildinfo
+
+### Rust / Tauri
+src-tauri/target
+src-tauri/gen
+
+### Env
+.env
+.env.*
+!.env.example

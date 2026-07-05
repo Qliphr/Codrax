@@ -1,0 +1,95 @@
+import { COLORS, accentDim } from "@/lib/theme";
+import { initRepo, type GitChange } from "@/lib/tauri";
+import { useGitStatus } from "@/hooks/useGitStatus";
+
+const TAG_COLORS: Record<GitChange["tag"], string> = {
+  M: "#FFD166",
+  A: "#6BCB77",
+  D: "#FF4757",
+};
+
+interface GitStatusProps {
+  workspacePath: string;
+}
+
+export function GitStatus({ workspacePath }: GitStatusProps) {
+  const { status, loading, refresh } = useGitStatus(workspacePath);
+
+  if (loading || !status) {
+    return (
+      <div
+        className="mt-auto border-t px-3 py-3"
+        style={{ borderColor: COLORS.borderSubtle, background: COLORS.bgPanel }}
+      >
+        <span className="font-sans text-[11px]" style={{ color: COLORS.textDim }}>
+          {loading ? "Checking git status…" : "Git status unavailable"}
+        </span>
+      </div>
+    );
+  }
+
+  if (status.kind === "notARepo") {
+    return (
+      <div
+        className="mt-auto flex flex-col gap-2 border-t px-3 py-3"
+        style={{ borderColor: COLORS.borderSubtle, background: COLORS.bgPanel }}
+      >
+        <span className="font-sans text-[11px]" style={{ color: COLORS.textDim }}>
+          This folder isn't a git repo — auto-commit is disabled.
+        </span>
+        <button
+          onClick={async () => {
+            await initRepo(workspacePath);
+            await refresh();
+          }}
+          className="self-start rounded-md border px-2.5 py-1 font-sans text-[11px]"
+          style={{ color: COLORS.accent, background: accentDim(), borderColor: COLORS.borderDefault }}
+        >
+          Initialize git repo
+        </button>
+      </div>
+    );
+  }
+
+  const { branch, ahead, changes } = status;
+
+  return (
+    <div className="mt-auto border-t px-3 pb-3.5 pt-2.5" style={{ borderColor: COLORS.borderSubtle, background: COLORS.bgPanel }}>
+      <div className="flex items-center gap-1.5 px-1.5 pb-2.5">
+        <span className="font-sans text-[11px]" style={{ color: COLORS.textSecondary }}>
+          ⎇
+        </span>
+        <span
+          className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap font-sans text-xs"
+          style={{ color: COLORS.textSoft }}
+        >
+          {branch}
+        </span>
+        {ahead > 0 && (
+          <span
+            className="whitespace-nowrap rounded px-1.5 py-px font-sans text-[10px]"
+            style={{ color: COLORS.accent, background: accentDim() }}
+          >
+            ↑{ahead}
+          </span>
+        )}
+      </div>
+      {changes.length === 0 ? (
+        <div className="px-1.5 py-[3px] font-sans text-[11px]" style={{ color: COLORS.textDim }}>
+          Working tree clean
+        </div>
+      ) : (
+        changes.map((c, i) => (
+          <div key={i} className="flex items-center gap-2.5 px-1.5 py-[3px] font-sans text-xs">
+            <span className="w-3 flex-none text-center font-semibold" style={{ color: TAG_COLORS[c.tag] }}>
+              {c.tag}
+            </span>
+            <span className="overflow-hidden text-ellipsis whitespace-nowrap" style={{ color: COLORS.textSecondary }}>
+              {c.path}
+            </span>
+          </div>
+        ))
+      )}
+    </div>
+  );
+}

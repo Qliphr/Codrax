@@ -1,0 +1,238 @@
+@import "tailwindcss";
+@import "@fontsource/geist/400.css";
+@import "@fontsource/geist/500.css";
+@import "@fontsource/geist/600.css";
+@import "@fontsource/geist/700.css";
+@import "@fontsource/geist-mono/400.css";
+@import "@fontsource/geist-mono/500.css";
+@import "@fontsource/geist-mono/600.css";
+
+@theme {
+  --font-sans: "Geist", "DM Sans", sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, monospace;
+
+  /* backgrounds */
+  --color-app: #191716;
+  --color-sidebar: #201c1b;
+  --color-surface: #242020;
+  --color-panel: #1d1918;
+  --color-term-header: #141110;
+  --color-term-body: #0d0b0a;
+
+  /* borders */
+  --color-border-subtle: #34302e;
+  --color-border-default: #3d3733;
+  --color-border-strong: #3a3532;
+
+  /* text */
+  --color-text-primary: #f3eee7;
+  --color-text-soft: #dad2c8;
+  --color-text-body: #c7beb3;
+  --color-text-secondary: #a39a90;
+  --color-text-muted: #948b81;
+  --color-text-dim: #746a62;
+  --color-text-faint: #8a8078;
+
+  /* accent */
+  --color-accent: #d97757;
+  --color-accent-alt-1: #bd5d3a;
+  --color-accent-alt-2: #c97650;
+
+  /* priority */
+  --color-critical: #ff4757;
+  --color-high: #ff8c42;
+  --color-medium: #ffd166;
+  --color-low: #6bcb77;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: var(--color-app);
+  font-family: var(--font-sans);
+}
+
+::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-border-default);
+  border-radius: 6px;
+  border: 2px solid var(--color-app);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-accent);
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+@keyframes pulseGlow {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+@keyframes blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes dotPulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.35);
+    opacity: 0.55;
+  }
+}
+
+/* Motion tokens — pattern borrowed from Terax (.terax/terax-ai-main/src/styles/globals.css).
+ * Plain CSS keyframes + a usePresence hook instead of framer-motion, so exit
+ * animations work without pulling in a JS animation library. Reduced-motion
+ * zeroes the durations as a global snap. */
+:root {
+  --dur-fast: 160ms;
+  --dur-base: 220ms;
+  --dur-slow: 300ms;
+  --ease-premium: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-soft: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes vos-overlay-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes vos-overlay-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+.vos-overlay {
+  animation: vos-overlay-in var(--dur-base) var(--ease-soft);
+}
+.vos-overlay[data-state="closed"] {
+  animation: vos-overlay-out var(--dur-fast) var(--ease-soft) forwards;
+}
+
+/* Slide-over panel (CardDetail) — slides in from the right edge. */
+@keyframes vos-panel-in {
+  from {
+    opacity: 0;
+    transform: translateX(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+@keyframes vos-panel-out {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(40px);
+  }
+}
+.vos-panel {
+  animation: vos-panel-in var(--dur-slow) var(--ease-premium);
+}
+.vos-panel[data-state="closed"] {
+  animation: vos-panel-out var(--dur-fast) var(--ease-soft) forwards;
+}
+
+/* Centered modal (SettingsModal) — scale + fade. */
+@keyframes vos-modal-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes vos-modal-out {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+.vos-modal {
+  animation: vos-modal-in var(--dur-base) var(--ease-premium);
+}
+.vos-modal[data-state="closed"] {
+  animation: vos-modal-out var(--dur-fast) var(--ease-soft) forwards;
+}
+
+/* Toast pill — pops in from below. */
+@keyframes vos-pill-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+.vos-pill-in {
+  animation: vos-pill-in var(--dur-base) var(--ease-premium);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-fast: 0.01ms;
+    --dur-base: 0.01ms;
+    --dur-slow: 0.01ms;
+  }
+}
+
+.vos-input {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-default);
+  border-radius: 6px;
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  padding: 9px 11px;
+  outline: none;
+}
+.vos-input::placeholder {
+  color: var(--color-text-dim);
+}
+.vos-input:focus {
+  border-color: var(--color-accent);
+}

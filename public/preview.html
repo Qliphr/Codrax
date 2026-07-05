@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Preview</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        background: #191716;
+        font-family: -apple-system, "Segoe UI", sans-serif;
+      }
+      #bar {
+        height: 40px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 0 12px;
+        background: #242020;
+        border-bottom: 1px solid #34302e;
+      }
+      #url {
+        flex: 1;
+        color: #a39a90;
+        font-size: 12px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      button {
+        background: transparent;
+        border: 1px solid #3d3733;
+        color: #f3eee7;
+        border-radius: 6px;
+        padding: 5px 10px;
+        cursor: pointer;
+        font-size: 12px;
+        font-family: inherit;
+      }
+      button:hover {
+        background: #2c2725;
+      }
+      iframe {
+        display: block;
+        width: 100%;
+        height: calc(100% - 40px);
+        border: 0;
+        background: #fff;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="bar">
+      <span id="url"></span>
+      <button id="refresh">⟳ Refresh</button>
+    </div>
+    <iframe id="frame"></iframe>
+    <script>
+      const params = new URLSearchParams(window.location.search);
+      const targetUrl = params.get("url") || "about:blank";
+      document.getElementById("url").textContent = targetUrl;
+
+      const frame = document.getElementById("frame");
+      frame.src = targetUrl;
+
+      document.getElementById("refresh").addEventListener("click", () => {
+        frame.src = targetUrl;
+      });
+    </script>
+  </body>
+</html>
