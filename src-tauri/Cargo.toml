@@ -1,6 +1,6 @@
 [package]
 name = "codrax"
-version = "0.1.1"
+version = "0.1.2"
 description = "Codrax — desktop orchestration cockpit for vibe coders using Claude Code"
 authors = ["Codrax"]
 edition = "2021"
