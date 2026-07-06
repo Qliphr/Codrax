@@ -9,7 +9,7 @@ This document helps you decide *whether* and *how* to contribute in a way that's
 - Codrax has one active maintainer ([@Qliphr](https://github.com/Qliphr)).
 - Review bandwidth is limited.
 - Not every contribution can be accepted, even if it's technically correct. Alignment with project direction matters as much as code quality.
-- For scope and direction, see [CLAUDE.md](../CLAUDE.md). Read it before opening anything non-trivial — it documents what Codrax is, what it isn't, and the MVP priority order.
+- For scope and direction, see [CLAUDE.md](../.claude/CLAUDE.md). Read it before opening anything non-trivial — it documents what Codrax is, what it isn't, and the MVP priority order.
 
 This is normal for a solo project. A "no" on a PR is not personal.
 
