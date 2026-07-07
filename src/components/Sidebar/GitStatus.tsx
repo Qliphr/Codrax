@@ -13,12 +13,18 @@ const TAG_COLORS: Record<GitChange["tag"], string> = {
 
 interface GitStatusProps {
   workspacePath: string;
+  onGitChanged?: () => void;
 }
 
-export function GitStatus({ workspacePath }: GitStatusProps) {
+export function GitStatus({ workspacePath, onGitChanged }: GitStatusProps) {
   const { status, loading, refresh } = useGitStatus(workspacePath);
   const [commitOpen, setCommitOpen] = useState(false);
   const [pushOpen, setPushOpen] = useState(false);
+
+  const refreshAll = async () => {
+    await refresh();
+    onGitChanged?.();
+  };
 
   if (loading || !status) {
     return (
@@ -126,7 +132,7 @@ export function GitStatus({ workspacePath }: GitStatusProps) {
         workspacePath={workspacePath}
         changes={changes}
         onClose={() => setCommitOpen(false)}
-        onCommitted={refresh}
+        onCommitted={refreshAll}
       />
       <PushModal
         open={pushOpen}
@@ -134,7 +140,7 @@ export function GitStatus({ workspacePath }: GitStatusProps) {
         branch={branch}
         ahead={ahead}
         onClose={() => setPushOpen(false)}
-        onPushed={refresh}
+        onPushed={refreshAll}
       />
     </div>
   );

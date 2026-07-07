@@ -140,7 +140,7 @@ export function TopBar({
                         onSelectWorkspace(ws.id);
                         setSwitcherOpen(false);
                       }}
-                      className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-[13px] hover:bg-[#2C2725]"
+                      className="no-drag flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-[13px] hover:bg-[#2C2725]"
                       style={{
                         color: active ? COLORS.textPrimary : COLORS.textSecondary,
                         background: active ? "#2C2725" : "transparent",
@@ -167,7 +167,7 @@ export function TopBar({
                   onAddWorkspace();
                   setSwitcherOpen(false);
                 }}
-                className="flex cursor-pointer items-center gap-2 border-t px-3 py-2.5 text-[13px] hover:bg-[#2C2725]"
+                className="no-drag flex cursor-pointer items-center gap-2 border-t px-3 py-2.5 text-[13px] hover:bg-[#2C2725]"
                 style={{ borderColor: COLORS.borderSubtle, color: COLORS.textDim }}
               >
                 <span className="w-2 flex-none text-center">＋</span>

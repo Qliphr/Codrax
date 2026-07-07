@@ -13,6 +13,7 @@ const EXCLUDED_DIRS: &[&str] = &[
     "venv",
     ".cache",
     ".turbo",
+    ".git",
 ];
 const MAX_DEPTH: u32 = 4;
 const MAX_ENTRIES: usize = 500;
@@ -141,6 +142,24 @@ mod tests {
         let entries = list_files(dir.path().to_string_lossy().to_string(), true).expect("ok");
         let paths: Vec<&str> = entries.iter().map(|e| e.path.as_str()).collect();
         assert!(paths.contains(&".hidden"));
+    }
+
+    #[test]
+    fn show_hidden_skips_git_dir_and_keeps_normal_files() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        fs::create_dir_all(dir.path().join(".git/objects")).unwrap();
+        for i in 0..10 {
+            fs::write(dir.path().join(format!(".git/objects/f{i}")), "").unwrap();
+        }
+        fs::write(dir.path().join(".env"), "").unwrap();
+        fs::write(dir.path().join("Cargo.toml"), "").unwrap();
+
+        let entries = list_files(dir.path().to_string_lossy().to_string(), true).expect("ok");
+        let paths: Vec<&str> = entries.iter().map(|e| e.path.as_str()).collect();
+
+        assert!(!paths.iter().any(|p| p.starts_with(".git")));
+        assert!(paths.contains(&".env"));
+        assert!(paths.contains(&"Cargo.toml"));
     }
 
     #[test]

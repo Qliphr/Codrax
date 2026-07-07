@@ -32,10 +32,11 @@ function relativeTime(unixSeconds: number): string {
 
 interface GitGraphProps {
   workspacePath: string;
+  refreshToken?: number;
 }
 
-export function GitGraph({ workspacePath }: GitGraphProps) {
-  const { log, loading } = useGitLog(workspacePath);
+export function GitGraph({ workspacePath, refreshToken }: GitGraphProps) {
+  const { log, loading } = useGitLog(workspacePath, refreshToken);
 
   if (loading || !log || log.kind === "notARepo") return null;
 

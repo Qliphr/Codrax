@@ -49,6 +49,7 @@ export function Sidebar({
   onSetView,
 }: SidebarProps) {
   const activeWorkspace = workspaces.find((w) => w.id === activeWorkspaceId) ?? workspaces[0];
+  const [gitVersion, setGitVersion] = useState(0);
 
   const [width, setWidth] = useState(() => {
     const stored = Number(localStorage.getItem(SIDEBAR_WIDTH_STORAGE_KEY));
@@ -178,9 +179,9 @@ export function Sidebar({
             style={{ height: DIVIDER_HEIGHT, borderTop: `1px solid ${COLORS.borderSubtle}` }}
           />
           <div className="min-h-0 flex-1 overflow-y-auto">
-            <GitGraph workspacePath={activeWorkspace.path} />
+            <GitGraph workspacePath={activeWorkspace.path} refreshToken={gitVersion} />
           </div>
-          <GitStatus workspacePath={activeWorkspace.path} />
+          <GitStatus workspacePath={activeWorkspace.path} onGitChanged={() => setGitVersion((v) => v + 1)} />
         </div>
       )}
     </div>

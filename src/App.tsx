@@ -101,6 +101,11 @@ export default function App() {
         e.preventDefault();
         setView((v) => (v === "board" ? "terminals" : "board"));
       }
+      const isSettingsShortcut = (e.metaKey || e.ctrlKey) && e.key === ",";
+      if (isSettingsShortcut) {
+        e.preventDefault();
+        setSettingsOpen(true);
+      }
     }
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);

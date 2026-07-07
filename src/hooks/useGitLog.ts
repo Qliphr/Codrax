@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { gitLog, type GitLogResponse } from "@/lib/tauri";
 
-export function useGitLog(path: string) {
+export function useGitLog(path: string, refreshToken = 0) {
   const [log, setLog] = useState<GitLogResponse | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -19,7 +19,8 @@ export function useGitLog(path: string) {
 
   useEffect(() => {
     void refresh();
-  }, [refresh]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [refresh, refreshToken]);
 
   return { log, loading, refresh };
 }
