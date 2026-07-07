@@ -64,6 +64,23 @@ export function GeneralSection({ workspace }: GeneralSectionProps) {
           </SettingRow>
         </div>
       </div>
+
+      <div>
+        <h3 className="mb-2.5 font-sans text-[11px] uppercase tracking-wider" style={{ color: COLORS.textMuted }}>
+          File Tree
+        </h3>
+        <div className="flex flex-col gap-2">
+          <SettingRow title="Show hidden files" description="Display dotfiles and dotfolders (e.g. .git, .env)">
+            <input
+              type="checkbox"
+              className="size-4 accent-current"
+              style={{ color: COLORS.textPrimary }}
+              checked={workspace.settings.showHiddenFiles ?? false}
+              onChange={(e) => updateWorkspaceSettings(workspace.id, { showHiddenFiles: e.target.checked })}
+            />
+          </SettingRow>
+        </div>
+      </div>
     </div>
   );
 }

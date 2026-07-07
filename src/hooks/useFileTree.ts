@@ -2,14 +2,14 @@ import { useEffect, useState } from "react";
 import { listFiles } from "@/lib/tauri";
 import type { FileEntry } from "@/lib/types";
 
-export function useFileTree(path: string) {
+export function useFileTree(path: string, showHidden: boolean) {
   const [files, setFiles] = useState<FileEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    listFiles(path)
+    listFiles(path, showHidden)
       .then((entries) => {
         if (!cancelled) setFiles(entries);
       })
@@ -23,7 +23,7 @@ export function useFileTree(path: string) {
     return () => {
       cancelled = true;
     };
-  }, [path]);
+  }, [path, showHidden]);
 
   return { files, loading };
 }

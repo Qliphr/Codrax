@@ -51,10 +51,11 @@ function visibleEntries(files: FileEntry[], expanded: Set<string>): FileEntry[] 
 interface FileTreeProps {
   workspaceName: string;
   workspacePath: string;
+  showHiddenFiles: boolean;
 }
 
-export function FileTree({ workspaceName, workspacePath }: FileTreeProps) {
-  const { files, loading } = useFileTree(workspacePath);
+export function FileTree({ workspaceName, workspacePath, showHiddenFiles }: FileTreeProps) {
+  const { files, loading } = useFileTree(workspacePath, showHiddenFiles);
   const { status } = useGitStatus(workspacePath);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [selected, setSelected] = useState<string | null>(null);

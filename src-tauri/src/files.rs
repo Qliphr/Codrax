@@ -34,20 +34,20 @@ pub fn check_path_exists(path: String) -> bool {
 }
 
 /// Lists a workspace's file tree, flattened depth-first (dirs before files, alphabetical).
-/// Skips dotfiles/dirs and common build-output noise, and caps depth/entry count so a huge
-/// repo can't hang the sidebar.
+/// Skips dotfiles/dirs (unless `show_hidden`) and common build-output noise, and caps
+/// depth/entry count so a huge repo can't hang the sidebar.
 #[tauri::command]
-pub fn list_files(path: String) -> Result<Vec<FileEntry>, String> {
+pub fn list_files(path: String, show_hidden: bool) -> Result<Vec<FileEntry>, String> {
     let root = Path::new(&path);
     if !root.is_dir() {
         return Ok(Vec::new());
     }
     let mut out = Vec::new();
-    walk(root, root, 0, &mut out);
+    walk(root, root, 0, show_hidden, &mut out);
     Ok(out)
 }
 
-fn walk(root: &Path, dir: &Path, depth: u32, out: &mut Vec<FileEntry>) {
+fn walk(root: &Path, dir: &Path, depth: u32, show_hidden: bool, out: &mut Vec<FileEntry>) {
     if depth > MAX_DEPTH || out.len() >= MAX_ENTRIES {
         return;
     }
@@ -77,7 +77,7 @@ fn walk(root: &Path, dir: &Path, depth: u32, out: &mut Vec<FileEntry>) {
         }
 
         let name = entry.file_name().to_string_lossy().to_string();
-        if name.starts_with('.') {
+        if name.starts_with('.') && !show_hidden {
             continue;
         }
 
@@ -95,7 +95,7 @@ fn walk(root: &Path, dir: &Path, depth: u32, out: &mut Vec<FileEntry>) {
         out.push(FileEntry { path: rel_path, name, depth, dir: is_dir });
 
         if is_dir {
-            walk(root, &entry_path, depth + 1, out);
+            walk(root, &entry_path, depth + 1, show_hidden, out);
         }
     }
 }
@@ -116,7 +116,7 @@ mod tests {
         fs::write(dir.path().join(".hidden"), "").unwrap();
         fs::write(dir.path().join("Cargo.toml"), "").unwrap();
 
-        let entries = list_files(dir.path().to_string_lossy().to_string()).expect("ok");
+        let entries = list_files(dir.path().to_string_lossy().to_string(), false).expect("ok");
         let paths: Vec<&str> = entries.iter().map(|e| e.path.as_str()).collect();
 
         assert!(paths.contains(&"src"));
@@ -134,8 +134,18 @@ mod tests {
     }
 
     #[test]
+    fn show_hidden_includes_dotfiles() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        fs::write(dir.path().join(".hidden"), "").unwrap();
+
+        let entries = list_files(dir.path().to_string_lossy().to_string(), true).expect("ok");
+        let paths: Vec<&str> = entries.iter().map(|e| e.path.as_str()).collect();
+        assert!(paths.contains(&".hidden"));
+    }
+
+    #[test]
     fn returns_empty_for_missing_path() {
-        let entries = list_files("/definitely/does/not/exist".to_string()).expect("ok");
+        let entries = list_files("/definitely/does/not/exist".to_string(), false).expect("ok");
         assert!(entries.is_empty());
     }
 

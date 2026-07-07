@@ -12,7 +12,7 @@ pub struct GitChange {
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum GitStatusResponse {
     NotARepo,
-    Ok { branch: String, ahead: usize, changes: Vec<GitChange> },
+    Ok { branch: String, ahead: usize, has_upstream: bool, changes: Vec<GitChange> },
 }
 
 fn status_tag(status: git2::Status) -> Option<&'static str> {
@@ -53,11 +53,16 @@ pub fn git_changed_paths(path: String) -> Result<Vec<String>, String> {
     collect_changed_paths(&repo)
 }
 
+fn upstream_oid(repo: &Repository) -> Option<Oid> {
+    let head = repo.head().ok()?;
+    let branch_name = head.shorthand().ok()?;
+    repo.refname_to_id(&format!("refs/remotes/origin/{branch_name}")).ok()
+}
+
 fn compute_ahead(repo: &Repository) -> Option<usize> {
     let head = repo.head().ok()?;
     let local_oid = head.target()?;
-    let branch_name = head.shorthand().ok()?;
-    let upstream_oid = repo.refname_to_id(&format!("refs/remotes/origin/{branch_name}")).ok()?;
+    let upstream_oid = upstream_oid(repo)?;
     let (ahead, _behind) = repo.graph_ahead_behind(local_oid, upstream_oid).ok()?;
     Some(ahead)
 }
@@ -75,6 +80,7 @@ pub fn git_status(path: String) -> Result<GitStatusResponse, String> {
         .and_then(|h| h.shorthand().ok().map(str::to_string))
         .unwrap_or_else(|| "HEAD".to_string());
     let ahead = compute_ahead(&repo).unwrap_or(0);
+    let has_upstream = upstream_oid(&repo).is_some();
 
     let mut opts = git2::StatusOptions::new();
     opts.include_untracked(true);
@@ -89,7 +95,7 @@ pub fn git_status(path: String) -> Result<GitStatusResponse, String> {
         })
         .collect();
 
-    Ok(GitStatusResponse::Ok { branch, ahead, changes })
+    Ok(GitStatusResponse::Ok { branch, ahead, has_upstream, changes })
 }
 
 /// Initializes a git repo at `path` — used when a workspace is added without one.
@@ -183,6 +189,7 @@ pub struct GitCommit {
     pub timestamp: i64,
     pub parents: Vec<String>,
     pub lane: usize,
+    pub pushed: bool,
 }
 
 #[derive(Debug, Serialize)]
@@ -213,6 +220,8 @@ pub fn git_log(path: String) -> Result<GitLogResponse, String> {
     revwalk
         .set_sorting(Sort::TOPOLOGICAL | Sort::TIME)
         .map_err(|e| e.to_string())?;
+
+    let upstream = upstream_oid(&repo);
 
     let mut active: Vec<Option<Oid>> = Vec::new();
     let mut commits = Vec::with_capacity(GIT_LOG_LIMIT);
@@ -248,6 +257,11 @@ pub fn git_log(path: String) -> Result<GitLogResponse, String> {
             }
         }
 
+        let pushed = match upstream {
+            Some(u) => u == oid || repo.graph_descendant_of(u, oid).unwrap_or(false),
+            None => false,
+        };
+
         let oid_str = oid.to_string();
         commits.push(GitCommit {
             short_oid: oid_str[..7.min(oid_str.len())].to_string(),
@@ -257,6 +271,7 @@ pub fn git_log(path: String) -> Result<GitLogResponse, String> {
             timestamp: commit.time().seconds(),
             parents: parents.iter().map(Oid::to_string).collect(),
             lane,
+            pushed,
         });
     }
 

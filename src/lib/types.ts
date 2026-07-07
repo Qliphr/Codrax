@@ -40,6 +40,7 @@ export interface Card {
 export interface WorkspaceSettings {
   previewPort: number;
   previewUrl?: string;
+  showHiddenFiles?: boolean;
 }
 
 export interface Workspace {

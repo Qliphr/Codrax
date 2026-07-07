@@ -56,7 +56,8 @@ export function GitStatus({ workspacePath }: GitStatusProps) {
     );
   }
 
-  const { branch, ahead, changes } = status;
+  const { branch, ahead, hasUpstream, changes } = status;
+  const canPush = ahead > 0 || !hasUpstream;
 
   return (
     <div className="mt-auto border-t px-3 pb-3.5 pt-2.5" style={{ borderColor: COLORS.borderSubtle, background: COLORS.bgPanel }}>
@@ -109,13 +110,15 @@ export function GitStatus({ workspacePath }: GitStatusProps) {
         >
           Commit
         </button>
-        <button
-          onClick={() => setPushOpen(true)}
-          className="flex-1 rounded-md border py-1.5 font-sans text-[11px] font-semibold"
-          style={{ color: COLORS.accent, background: accentDim(), borderColor: COLORS.borderDefault }}
-        >
-          Push
-        </button>
+        {canPush && (
+          <button
+            onClick={() => setPushOpen(true)}
+            className="flex-1 rounded-md border py-1.5 font-sans text-[11px] font-semibold"
+            style={{ color: COLORS.accent, background: accentDim(), borderColor: COLORS.borderDefault }}
+          >
+            Push
+          </button>
+        )}
       </div>
 
       <CommitModal

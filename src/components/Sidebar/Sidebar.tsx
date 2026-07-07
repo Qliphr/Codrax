@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from "react";
+import { LayoutGrid, SquareTerminal } from "lucide-react";
 import { COLORS, accentDim } from "@/lib/theme";
 import type { Workspace } from "@/lib/types";
 import { WorkspaceList } from "./WorkspaceList";
 import { FileTree } from "./FileTree";
 import { GitGraph } from "./GitGraph";
+import { GitStatus } from "./GitStatus";
 
 export type BoardView = "board" | "terminals";
 
@@ -140,7 +142,7 @@ export function Sidebar({
             boxShadow: view === "board" ? `inset 2px 0 0 ${COLORS.accent}` : undefined,
           }}
         >
-          <span className="w-[18px] font-sans text-[15px]">▤</span>
+          <LayoutGrid size={16} className="w-[18px]" strokeWidth={2} />
           <span>Board</span>
         </div>
         <div
@@ -152,7 +154,7 @@ export function Sidebar({
             boxShadow: view === "terminals" ? `inset 2px 0 0 ${COLORS.accent}` : undefined,
           }}
         >
-          <span className="w-[18px] font-sans text-[15px]">▧</span>
+          <SquareTerminal size={16} className="w-[18px]" strokeWidth={2} />
           <span>Terminals</span>
         </div>
       </div>
@@ -160,7 +162,11 @@ export function Sidebar({
       {activeWorkspace && (
         <div ref={splitContainerRef} className="flex min-h-0 flex-1 flex-col">
           <div style={{ height: fileTreeHeight }} className="min-h-0 flex-none overflow-y-auto">
-            <FileTree workspaceName={activeWorkspace.name} workspacePath={activeWorkspace.path} />
+            <FileTree
+              workspaceName={activeWorkspace.name}
+              workspacePath={activeWorkspace.path}
+              showHiddenFiles={activeWorkspace.settings.showHiddenFiles ?? false}
+            />
           </div>
           <div
             onMouseDown={() => {
@@ -174,6 +180,7 @@ export function Sidebar({
           <div className="min-h-0 flex-1 overflow-y-auto">
             <GitGraph workspacePath={activeWorkspace.path} />
           </div>
+          <GitStatus workspacePath={activeWorkspace.path} />
         </div>
       )}
     </div>

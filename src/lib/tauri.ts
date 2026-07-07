@@ -22,7 +22,7 @@ export interface GitChange {
 
 export type GitStatusResponse =
   | { kind: "notARepo" }
-  | { kind: "ok"; branch: string; ahead: number; changes: GitChange[] };
+  | { kind: "ok"; branch: string; ahead: number; hasUpstream: boolean; changes: GitChange[] };
 
 export function gitStatus(path: string): Promise<GitStatusResponse> {
   return invoke("git_status", { path });
@@ -55,6 +55,7 @@ export interface GitCommit {
   timestamp: number;
   parents: string[];
   lane: number;
+  pushed: boolean;
 }
 
 export type GitLogResponse =
@@ -93,8 +94,8 @@ export function openPreview(url: string): Promise<void> {
   return invoke("open_preview", { url });
 }
 
-export function listFiles(path: string): Promise<FileEntry[]> {
-  return invoke("list_files", { path });
+export function listFiles(path: string, showHidden: boolean): Promise<FileEntry[]> {
+  return invoke("list_files", { path, showHidden });
 }
 
 export interface CustomProvider {
