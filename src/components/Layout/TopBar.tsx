@@ -49,11 +49,17 @@ export function TopBar({
 }: TopBarProps) {
   const unreadCount = notifs.filter((n) => n.unread).length;
   const [switcherOpen, setSwitcherOpen] = useState(false);
+  const isMac = typeof navigator !== "undefined" && /mac/i.test(navigator.platform);
 
   return (
     <div
+      data-tauri-drag-region
       className="flex h-[46px] flex-none items-center gap-3.5 border-b px-3.5"
-      style={{ borderColor: COLORS.borderSubtle, background: COLORS.bgSurface }}
+      style={{
+        borderColor: COLORS.borderSubtle,
+        background: COLORS.bgSurface,
+        paddingLeft: isMac ? "78px" : undefined,
+      }}
     >
       <div className="flex items-center gap-2">
         <img src="/logo.png" alt="Codrax" className="h-[22px] w-[22px] rounded-md" />
