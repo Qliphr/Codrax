@@ -28,6 +28,20 @@ fn escape_for_platform(input: &str) -> String {
     }
 }
 
+/// Appends a completion sentinel that echoes the real exit code once the resolved command
+/// returns control to the shell — lets the frontend detect "agent finished its turn" by
+/// scanning stdout instead of relying on the shell process itself exiting.
+fn append_turn_sentinel(command: &str) -> String {
+    #[cfg(windows)]
+    {
+        format!("{command}; Write-Output \"@@CDRX_DONE:$LASTEXITCODE@@\"")
+    }
+    #[cfg(not(windows))]
+    {
+        format!("{command}; printf '@@CDRX_DONE:%s@@\\n' \"$?\"")
+    }
+}
+
 fn validate_placeholders(template: &str) -> Result<(), String> {
     let mut i = 0;
     while let Some(rel_start) = template[i..].find('{') {
@@ -65,5 +79,26 @@ pub fn resolve_pipeline_command(
     if let Some(prev) = prev_output {
         resolved = resolved.replace("{prev_output}", &escape_for_platform(&prev));
     }
-    Ok(resolved)
+    Ok(append_turn_sentinel(&resolved))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn resolve_pipeline_command_appends_turn_sentinel() {
+        let resolved = resolve_pipeline_command(
+            "claude -p \"{task}\"".to_string(),
+            "fix bug".to_string(),
+            String::new(),
+            None,
+        )
+        .unwrap();
+
+        #[cfg(not(windows))]
+        assert!(resolved.ends_with("; printf '@@CDRX_DONE:%s@@\\n' \"$?\""));
+        #[cfg(windows)]
+        assert!(resolved.ends_with("; Write-Output \"@@CDRX_DONE:$LASTEXITCODE@@\""));
+    }
 }

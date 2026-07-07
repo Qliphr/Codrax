@@ -6,7 +6,7 @@ import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
 import "@xterm/xterm/css/xterm.css";
 import { COLORS } from "@/lib/theme";
-import { extractBinaryName, isCommandNotFoundOutput } from "@/lib/shell";
+import { extractBinaryName, extractTurnDoneCode, isCommandNotFoundOutput } from "@/lib/shell";
 
 export interface SpawnConfig {
   cwd?: string;
@@ -19,14 +19,18 @@ interface UseTerminalOptions {
   spawn?: SpawnConfig;
   onExit?: (code: number) => void;
   onCommandNotFound?: (binary: string) => void;
+  /** Fires once when the pipeline turn-completion sentinel is seen in stdout (see `extractTurnDoneCode`). */
+  onTurnDone?: (exitCode: number) => void;
 }
 
-export function useTerminal({ terminalId, spawn, onExit, onCommandNotFound }: UseTerminalOptions) {
+export function useTerminal({ terminalId, spawn, onExit, onCommandNotFound, onTurnDone }: UseTerminalOptions) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const onExitRef = useRef(onExit);
   onExitRef.current = onExit;
   const onCommandNotFoundRef = useRef(onCommandNotFound);
   onCommandNotFoundRef.current = onCommandNotFound;
+  const onTurnDoneRef = useRef(onTurnDone);
+  onTurnDoneRef.current = onTurnDone;
 
   useEffect(() => {
     const container = containerRef.current;
@@ -57,6 +61,8 @@ export function useTerminal({ terminalId, spawn, onExit, onCommandNotFound }: Us
 
     async function setup() {
       let notFoundChecked = false;
+      let turnDoneFired = false;
+      let prevChunkTail = "";
       const unlistenOutput = await listen<string>(`pty://output/${terminalId}`, (event) => {
         term.write(event.payload);
         if (!notFoundChecked) {
@@ -64,6 +70,14 @@ export function useTerminal({ terminalId, spawn, onExit, onCommandNotFound }: Us
           if (spawn?.initialCommand && isCommandNotFoundOutput(event.payload)) {
             onCommandNotFoundRef.current?.(extractBinaryName(spawn.initialCommand));
           }
+        }
+        if (!turnDoneFired && spawn?.initialCommand) {
+          const code = extractTurnDoneCode(prevChunkTail + event.payload);
+          if (code !== null) {
+            turnDoneFired = true;
+            onTurnDoneRef.current?.(code);
+          }
+          prevChunkTail = event.payload.slice(-40);
         }
       });
       const unlistenExit = await listen<number>(`pty://exit/${terminalId}`, (event) => {

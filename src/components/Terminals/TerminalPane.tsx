@@ -10,6 +10,7 @@ interface TerminalPaneProps {
   pane: Pane;
   card: Card | undefined;
   onExit: (card: Card, exitCode: number) => void;
+  onTurnDone: (card: Card, exitCode: number) => void;
   onManualClose: (card: Card | null, terminalId: string) => void;
   onMoveCard: (cardId: string, status: ColumnKey) => void;
 }
@@ -19,7 +20,7 @@ function currentStepIndex(card: Card): number {
   return idx < 0 ? card.pipeline.length - 1 : idx;
 }
 
-export function TerminalPane({ pane, card, onExit, onManualClose, onMoveCard }: TerminalPaneProps) {
+export function TerminalPane({ pane, card, onExit, onTurnDone, onManualClose, onMoveCard }: TerminalPaneProps) {
   if (!pane.terminalId) {
     return (
       <div
@@ -64,6 +65,7 @@ export function TerminalPane({ pane, card, onExit, onManualClose, onMoveCard }: 
       status={status}
       statusColor={statusColor}
       onExit={onExit}
+      onTurnDone={onTurnDone}
       onManualClose={onManualClose}
       onMoveCard={onMoveCard}
     />
@@ -77,15 +79,37 @@ interface TerminalPaneLiveProps {
   status: string;
   statusColor: string;
   onExit: (card: Card, exitCode: number) => void;
+  onTurnDone: (card: Card, exitCode: number) => void;
   onManualClose: (card: Card | null, terminalId: string) => void;
   onMoveCard: (cardId: string, status: ColumnKey) => void;
 }
 
-function TerminalPaneLive({ card, pane, stepName, status, statusColor, onExit, onManualClose, onMoveCard }: TerminalPaneLiveProps) {
+function TerminalPaneLive({
+  card,
+  pane,
+  stepName,
+  status,
+  statusColor,
+  onExit,
+  onTurnDone,
+  onManualClose,
+  onMoveCard,
+}: TerminalPaneLiveProps) {
   const terminalId = pane.terminalId as string;
   const pushToast = useToastStore((s) => s.push);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const [justFinished, setJustFinished] = useState(false);
+  const wasDoneRef = useRef(status === "DONE");
+
+  useEffect(() => {
+    const wasDone = wasDoneRef.current;
+    wasDoneRef.current = status === "DONE";
+    if (status !== "DONE" || wasDone) return;
+    setJustFinished(true);
+    const t = setTimeout(() => setJustFinished(false), 1400);
+    return () => clearTimeout(t);
+  }, [status]);
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -99,12 +123,16 @@ function TerminalPaneLive({ card, pane, stepName, status, statusColor, onExit, o
     terminalId,
     spawn: { cwd: pane.cwd ?? undefined, initialCommand: pane.initialCommand || undefined },
     onExit: (code) => card && onExit(card, code),
+    onTurnDone: (code) => card && onTurnDone(card, code),
     onCommandNotFound: (binary) =>
       pushToast({ kind: "error", message: `The CLI "${binary}" isn't installed or not in PATH.` }),
   });
 
   return (
-    <div className="flex flex-col overflow-hidden rounded-lg border" style={{ borderColor: "#332D2A" }}>
+    <div
+      className={`flex flex-col overflow-hidden rounded-lg border ${justFinished ? "pane-glow-done" : ""}`}
+      style={{ borderColor: "#332D2A" }}
+    >
       <div
         className="flex h-[34px] flex-none items-center gap-2.5 border-b px-[11px]"
         style={{ background: COLORS.bgTermHeader, borderColor: "#332D2A" }}

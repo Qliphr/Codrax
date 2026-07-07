@@ -5,8 +5,9 @@ import { useTerminalStore } from "@/stores/terminal.store";
 import { PIPELINE_STEP_NAMES, type Card } from "@/lib/types";
 
 const STEP_COMMANDS: Record<(typeof PIPELINE_STEP_NAMES)[number], string> = {
-  Claude: 'claude "{task}"',
-  Kimi: 'kimi review "{task}"',
+  Claude: 'claude -p "{task}"',
+  // -p assumed to mirror Claude's headless one-shot flag — verify against the real Kimi CLI.
+  Kimi: 'kimi review -p "{task}"',
   commit: 'git add . && git commit -m "{task}"',
 };
 
@@ -117,14 +118,9 @@ export function usePipeline() {
     [setPipelineStepState],
   );
 
-  /** Manually finishes the current step (MVP: no stdout-completion detection yet) and,
-   * unless it was the last step, starts the next one. */
-  const advance = useCallback(
-    async (card: Card, cwd?: string) => {
-      if (card.pipeline.every((s) => s === "done")) return;
-      const stepIdx = currentStepIndex(card);
-
-      setPipelineStepState(card.id, stepIdx, "done");
+  /** Kills the terminal for `stepIdx` and, unless it was the last step, starts the next one. */
+  const proceedPastStep = useCallback(
+    async (card: Card, stepIdx: number, cwd?: string) => {
       if (card.terminalId) {
         await killTerminal(card.terminalId);
         setCardTerminal(card.id, null);
@@ -140,7 +136,31 @@ export function usePipeline() {
         await startAgent(advancedCard, cwd);
       }
     },
-    [setPipelineStepState, killTerminal, setCardTerminal, startAgent],
+    [killTerminal, setCardTerminal, startAgent],
+  );
+
+  /** Manually finishes the current step regardless of real agent state (escape hatch / retry)
+   * and, unless it was the last step, starts the next one. */
+  const advance = useCallback(
+    async (card: Card, cwd?: string) => {
+      if (card.pipeline.every((s) => s === "done")) return;
+      const stepIdx = currentStepIndex(card);
+      setPipelineStepState(card.id, stepIdx, "done");
+      await proceedPastStep(card, stepIdx, cwd);
+    },
+    [setPipelineStepState, proceedPastStep],
+  );
+
+  /** Fires when the pipeline turn-completion sentinel is seen in stdout — auto-advances on
+   * success, stays put on failure so the user can inspect and hit Retry (same as a manual crash). */
+  const handleTurnDone = useCallback(
+    async (card: Card, exitCode: number, cwd?: string) => {
+      const stepIdx = currentStepIndex(card);
+      setPipelineStepState(card.id, stepIdx, exitCode === 0 ? "done" : "failed");
+      if (exitCode !== 0) return;
+      await proceedPastStep(card, stepIdx, cwd);
+    },
+    [setPipelineStepState, proceedPastStep],
   );
 
   return {
@@ -151,6 +171,7 @@ export function usePipeline() {
     scheduleDoneCleanup,
     cancelDoneCleanup,
     handleAgentExit,
+    handleTurnDone,
     advance,
   };
 }

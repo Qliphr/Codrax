@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { open } from "@tauri-apps/plugin-dialog";
 import { checkPathExists, loadWorkspaces, saveWorkspaces } from "@/lib/tauri";
 import { MOCK_WORKSPACES } from "@/lib/mockData";
-import type { Workspace } from "@/lib/types";
+import type { Workspace, WorkspaceSettings } from "@/lib/types";
 
 const DOT_PALETTE = ["#D97757", "#BD5D3A", "#FF8C42", "#A39A90", "#6BCB77", "#FFD166"];
 
@@ -17,6 +17,7 @@ interface WorkspaceState {
   removeWorkspace: (id: string) => void;
   relocateWorkspace: (id: string) => Promise<void>;
   renameWorkspace: (id: string, name: string) => void;
+  updateWorkspaceSettings: (id: string, patch: Partial<WorkspaceSettings>) => void;
 }
 
 function persist(workspaces: Workspace[]) {
@@ -109,6 +110,12 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
     const trimmed = name.trim();
     if (!trimmed) return;
     const next = get().workspaces.map((w) => (w.id === id ? { ...w, name: trimmed } : w));
+    set({ workspaces: next });
+    persist(next);
+  },
+
+  updateWorkspaceSettings: (id, patch) => {
+    const next = get().workspaces.map((w) => (w.id === id ? { ...w, settings: { ...w.settings, ...patch } } : w));
     set({ workspaces: next });
     persist(next);
   },

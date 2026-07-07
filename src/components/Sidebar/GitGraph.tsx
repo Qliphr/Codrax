@@ -68,7 +68,7 @@ export function GitGraph({ workspacePath }: GitGraphProps) {
       >
         History
       </div>
-      <div className="max-h-[220px] overflow-y-auto">
+      <div>
         <div className="relative" style={{ height: graphHeight, width: "100%" }}>
           <svg
             className="pointer-events-none absolute left-0 top-0"

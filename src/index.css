@@ -111,6 +111,23 @@ body,
   }
 }
 
+/* One-shot ring on a terminal pane when its agent's turn just finished (see
+ * `onTurnDone` in useTerminal.ts). Not a loop — fires once, then the pane's
+ * normal border takes back over. */
+@keyframes paneTurnDone {
+  0% {
+    box-shadow: 0 0 0 0 rgba(107, 203, 119, 0.65);
+    border-color: rgba(107, 203, 119, 0.9);
+  }
+  100% {
+    box-shadow: 0 0 20px 3px rgba(107, 203, 119, 0);
+    border-color: #332d2a;
+  }
+}
+.pane-glow-done {
+  animation: paneTurnDone 1.4s var(--ease-soft) 1;
+}
+
 /* Motion tokens — pattern borrowed from Terax (.terax/terax-ai-main/src/styles/globals.css).
  * Plain CSS keyframes + a usePresence hook instead of framer-motion, so exit
  * animations work without pulling in a JS animation library. Reduced-motion
@@ -222,6 +239,9 @@ body,
     --dur-fast: 0.01ms;
     --dur-base: 0.01ms;
     --dur-slow: 0.01ms;
+  }
+  .pane-glow-done {
+    animation-duration: 0.01ms;
   }
 }
 

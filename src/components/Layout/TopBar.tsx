@@ -26,6 +26,7 @@ interface TopBarProps {
   notifsOpen: boolean;
   onToggleNotifs: () => void;
   onCloseNotifs: () => void;
+  onClearNotifs: () => void;
   onOpenSettings: () => void;
   onReset: () => void;
 }
@@ -44,6 +45,7 @@ export function TopBar({
   notifsOpen,
   onToggleNotifs,
   onCloseNotifs,
+  onClearNotifs,
   onOpenSettings,
   onReset,
 }: TopBarProps) {
@@ -205,10 +207,19 @@ export function TopBar({
             }}
           >
             <div
-              className="border-b px-3.5 py-3 text-[13px] font-semibold"
+              className="flex items-center justify-between border-b px-3.5 py-3 text-[13px] font-semibold"
               style={{ borderColor: COLORS.borderSubtle }}
             >
               Notifications
+              {notifs.length > 0 && (
+                <button
+                  onClick={onClearNotifs}
+                  className="font-sans text-[11px] font-normal hover:underline"
+                  style={{ color: COLORS.textMuted }}
+                >
+                  Clear
+                </button>
+              )}
             </div>
             <div className="max-h-[320px] overflow-y-auto">
               {notifs.length === 0 ? (

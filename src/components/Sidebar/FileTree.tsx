@@ -60,7 +60,7 @@ export function FileTree({ workspaceName, workspacePath }: FileTreeProps) {
   const [selected, setSelected] = useState<string | null>(null);
 
   useEffect(() => {
-    setExpanded(new Set(files.filter((f) => f.dir && f.depth === 0).map((f) => f.path)));
+    setExpanded(new Set());
   }, [files]);
 
   const changesByPath = useMemo(() => {

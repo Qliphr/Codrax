@@ -23,6 +23,7 @@ interface NotificationState {
   notifications: AppNotification[];
   push: (text: string, color: string) => void;
   markAllRead: () => void;
+  clear: () => void;
 }
 
 export const useNotificationStore = create<NotificationState>((set) => ({
@@ -35,4 +36,6 @@ export const useNotificationStore = create<NotificationState>((set) => ({
   },
 
   markAllRead: () => set((state) => ({ notifications: state.notifications.map((n) => ({ ...n, unread: false })) })),
+
+  clear: () => set({ notifications: [] }),
 }));

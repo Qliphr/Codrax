@@ -11,6 +11,12 @@ const SIDEBAR_MIN_WIDTH = 224;
 const SIDEBAR_MAX_WIDTH = 480;
 const SIDEBAR_WIDTH_STORAGE_KEY = "codrax-sidebar-width";
 
+const FILE_TREE_MIN_HEIGHT = 120;
+const GIT_GRAPH_MIN_HEIGHT = 100;
+const DIVIDER_HEIGHT = 5;
+const FILE_TREE_HEIGHT_STORAGE_KEY = "codrax-filetree-height";
+const FILE_TREE_DEFAULT_HEIGHT = 260;
+
 interface SidebarProps {
   workspaces: Workspace[];
   activeWorkspaceId: string;
@@ -48,21 +54,46 @@ export function Sidebar({
   });
   const isResizing = useRef(false);
 
+  const [fileTreeHeight, setFileTreeHeight] = useState(() => {
+    const stored = Number(localStorage.getItem(FILE_TREE_HEIGHT_STORAGE_KEY));
+    return stored >= FILE_TREE_MIN_HEIGHT ? stored : FILE_TREE_DEFAULT_HEIGHT;
+  });
+  const isResizingSplit = useRef(false);
+  const splitContainerRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     function handleMouseMove(e: MouseEvent) {
-      if (!isResizing.current) return;
-      const next = Math.min(SIDEBAR_MAX_WIDTH, Math.max(SIDEBAR_MIN_WIDTH, e.clientX));
-      setWidth(next);
+      if (isResizing.current) {
+        const next = Math.min(SIDEBAR_MAX_WIDTH, Math.max(SIDEBAR_MIN_WIDTH, e.clientX));
+        setWidth(next);
+      }
+      if (isResizingSplit.current && splitContainerRef.current) {
+        const top = splitContainerRef.current.getBoundingClientRect().top;
+        const containerHeight = splitContainerRef.current.clientHeight;
+        const max = containerHeight - DIVIDER_HEIGHT - GIT_GRAPH_MIN_HEIGHT;
+        const next = Math.min(max, Math.max(FILE_TREE_MIN_HEIGHT, e.clientY - top));
+        setFileTreeHeight(next);
+      }
     }
     function handleMouseUp() {
-      if (!isResizing.current) return;
-      isResizing.current = false;
-      document.body.style.cursor = "";
-      document.body.style.userSelect = "";
-      setWidth((current) => {
-        localStorage.setItem(SIDEBAR_WIDTH_STORAGE_KEY, String(current));
-        return current;
-      });
+      if (isResizing.current) {
+        isResizing.current = false;
+        document.body.style.cursor = "";
+        document.body.style.userSelect = "";
+        setWidth((current) => {
+          localStorage.setItem(SIDEBAR_WIDTH_STORAGE_KEY, String(current));
+          return current;
+        });
+      }
+      if (isResizingSplit.current) {
+        isResizingSplit.current = false;
+        document.body.style.cursor = "";
+        document.body.style.userSelect = "";
+        setFileTreeHeight((current) => {
+          localStorage.setItem(FILE_TREE_HEIGHT_STORAGE_KEY, String(current));
+          return current;
+        });
+      }
     }
     document.addEventListener("mousemove", handleMouseMove);
     document.addEventListener("mouseup", handleMouseUp);
@@ -74,7 +105,7 @@ export function Sidebar({
 
   return (
     <div
-      className="relative flex flex-none flex-col overflow-y-auto border-r"
+      className="relative flex flex-none flex-col overflow-hidden border-r"
       style={{ width, borderColor: COLORS.borderSubtle, background: COLORS.bgSidebar }}
     >
       <div
@@ -127,10 +158,23 @@ export function Sidebar({
       </div>
 
       {activeWorkspace && (
-        <>
-          <FileTree workspaceName={activeWorkspace.name} workspacePath={activeWorkspace.path} />
-          <GitGraph workspacePath={activeWorkspace.path} />
-        </>
+        <div ref={splitContainerRef} className="flex min-h-0 flex-1 flex-col">
+          <div style={{ height: fileTreeHeight }} className="min-h-0 flex-none overflow-y-auto">
+            <FileTree workspaceName={activeWorkspace.name} workspacePath={activeWorkspace.path} />
+          </div>
+          <div
+            onMouseDown={() => {
+              isResizingSplit.current = true;
+              document.body.style.cursor = "row-resize";
+              document.body.style.userSelect = "none";
+            }}
+            className="flex-none cursor-row-resize"
+            style={{ height: DIVIDER_HEIGHT, borderTop: `1px solid ${COLORS.borderSubtle}` }}
+          />
+          <div className="min-h-0 flex-1 overflow-y-auto">
+            <GitGraph workspacePath={activeWorkspace.path} />
+          </div>
+        </div>
       )}
     </div>
   );

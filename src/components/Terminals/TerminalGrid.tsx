@@ -6,12 +6,13 @@ import { TerminalPane } from "./TerminalPane";
 interface TerminalGridProps {
   cards: Card[];
   onExit: (card: Card, exitCode: number) => void;
+  onTurnDone: (card: Card, exitCode: number) => void;
   onManualClose: (card: Card | null, terminalId: string) => void;
   onNewTerminal: () => void;
   onMoveCard: (cardId: string, status: ColumnKey) => void;
 }
 
-export function TerminalGrid({ cards, onExit, onManualClose, onNewTerminal, onMoveCard }: TerminalGridProps) {
+export function TerminalGrid({ cards, onExit, onTurnDone, onManualClose, onNewTerminal, onMoveCard }: TerminalGridProps) {
   const panes = useTerminalStore((s) => s.panes);
   const runningCount = panes.filter((p) => p.terminalId !== null).length;
   const hasIdlePane = panes.some((p) => p.terminalId === null);
@@ -49,6 +50,7 @@ export function TerminalGrid({ cards, onExit, onManualClose, onNewTerminal, onMo
             pane={pane}
             card={cards.find((c) => c.id === pane.cardId)}
             onExit={onExit}
+            onTurnDone={onTurnDone}
             onManualClose={onManualClose}
             onMoveCard={onMoveCard}
           />

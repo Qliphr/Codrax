@@ -48,10 +48,11 @@ export default function App() {
     scheduleDoneCleanup,
     cancelDoneCleanup,
     handleAgentExit,
+    handleTurnDone,
     advance,
   } = usePipeline();
   const pushToast = useToastStore((s) => s.push);
-  const { notifications, push: pushNotification, markAllRead } = useNotificationStore();
+  const { notifications, push: pushNotification, markAllRead, clear: clearNotifications } = useNotificationStore();
 
   useAutoUpdate();
 
@@ -222,6 +223,15 @@ export default function App() {
     }
   }
 
+  function handleTurnDoneEvent(card: Card, exitCode: number) {
+    void handleTurnDone(card, exitCode, workspace?.path);
+    if (exitCode === 0) {
+      pushNotification(`Agent finished on "${card.title}".`, COLORS.accent);
+    } else {
+      pushNotification(`Agent failed on "${card.title}" — exited with code ${exitCode}.`, "#FF4757");
+    }
+  }
+
   function handleManualClose(card: Card | null, terminalId: string) {
     if (card) void stopAgent(card);
     else void killTerminal(terminalId);
@@ -313,6 +323,7 @@ export default function App() {
           })
         }
         onCloseNotifs={() => setNotifsOpen(false)}
+        onClearNotifs={clearNotifications}
         onOpenSettings={() => setSettingsOpen(true)}
         onReset={() => setActiveWorkspaceId(workspaces[0]?.id ?? null)}
       />
@@ -344,7 +355,7 @@ export default function App() {
         />
 
         <div className="flex min-w-0 flex-1 flex-col" style={{ background: COLORS.bgApp }}>
-          {view === "board" ? (
+          <div className={`flex min-h-0 flex-1 flex-col ${view === "board" ? "" : "hidden"}`}>
             <KanbanBoard
               cards={cards}
               activeCount={activeCount}
@@ -352,15 +363,17 @@ export default function App() {
               onMoveCard={handleMoveCard}
               onCardClick={(card) => setSelectedCardId(card.id)}
             />
-          ) : (
+          </div>
+          <div className={`flex min-h-0 flex-1 flex-col ${view === "terminals" ? "" : "hidden"}`}>
             <TerminalGrid
               cards={cards}
               onExit={handleAgentExitEvent}
+              onTurnDone={handleTurnDoneEvent}
               onManualClose={handleManualClose}
               onNewTerminal={handleNewTerminal}
               onMoveCard={handleMoveCard}
             />
-          )}
+          </div>
         </div>
       </div>
 
@@ -383,7 +396,7 @@ export default function App() {
         onDelete={handleDeleteCard}
       />
 
-      <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+      <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} workspace={workspace} />
 
       <ToastStack />
     </div>

@@ -16,3 +16,11 @@ export function extractBinaryName(command: string): string {
   const raw = (match?.[1] ?? match?.[2] ?? match?.[3] ?? trimmed).trim();
   return raw.split(/[\\/]/).pop() || raw;
 }
+
+const TURN_DONE_RE = /@@CDRX_DONE:(-?\d+)@@/;
+
+/** Extracts the exit code from the pipeline's turn-completion sentinel (see `append_turn_sentinel` in pipeline.rs), if present in this chunk. */
+export function extractTurnDoneCode(text: string): number | null {
+  const match = TURN_DONE_RE.exec(text);
+  return match ? Number(match[1]) : null;
+}
