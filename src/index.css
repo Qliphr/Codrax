@@ -12,20 +12,6 @@ button:not(:disabled),
   cursor: pointer;
 }
 
-[data-tauri-drag-region] {
-  -webkit-app-region: drag;
-  app-region: drag;
-}
-
-[data-tauri-drag-region] button,
-[data-tauri-drag-region] a,
-[data-tauri-drag-region] input,
-[data-tauri-drag-region] [role="button"],
-[data-tauri-drag-region] .no-drag {
-  -webkit-app-region: no-drag;
-  app-region: no-drag;
-}
-
 @theme {
   --font-sans: "Geist", "DM Sans", sans-serif;
   --font-mono: "Geist Mono", ui-monospace, monospace;

@@ -55,7 +55,7 @@ export function TopBar({
 
   return (
     <div
-      data-tauri-drag-region
+      data-tauri-drag-region="deep"
       className="flex h-[46px] flex-none items-center gap-3.5 border-b px-3.5"
       style={{
         borderColor: COLORS.borderSubtle,
@@ -86,8 +86,13 @@ export function TopBar({
 
         {switcherOpen && (
           <>
-            <div onClick={() => setSwitcherOpen(false)} className="fixed inset-0 z-[59]" />
             <div
+              onClick={() => setSwitcherOpen(false)}
+              data-tauri-drag-region="false"
+              className="fixed inset-0 z-[59]"
+            />
+            <div
+              data-tauri-drag-region="false"
               className="absolute left-0 top-[38px] z-[60] w-[280px] overflow-hidden rounded-[10px] border"
               style={{
                 background: COLORS.bgSurface,
@@ -140,7 +145,8 @@ export function TopBar({
                         onSelectWorkspace(ws.id);
                         setSwitcherOpen(false);
                       }}
-                      className="no-drag flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-[13px] hover:bg-[#2C2725]"
+                      data-tauri-drag-region="false"
+                      className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-[13px] hover:bg-[#2C2725]"
                       style={{
                         color: active ? COLORS.textPrimary : COLORS.textSecondary,
                         background: active ? "#2C2725" : "transparent",
@@ -167,7 +173,8 @@ export function TopBar({
                   onAddWorkspace();
                   setSwitcherOpen(false);
                 }}
-                className="no-drag flex cursor-pointer items-center gap-2 border-t px-3 py-2.5 text-[13px] hover:bg-[#2C2725]"
+                data-tauri-drag-region="false"
+                className="flex cursor-pointer items-center gap-2 border-t px-3 py-2.5 text-[13px] hover:bg-[#2C2725]"
                 style={{ borderColor: COLORS.borderSubtle, color: COLORS.textDim }}
               >
                 <span className="w-2 flex-none text-center">＋</span>
@@ -197,8 +204,9 @@ export function TopBar({
 
       {notifsOpen && (
         <div className="relative">
-          <div onClick={onCloseNotifs} className="fixed inset-0 z-[59]" />
+          <div onClick={onCloseNotifs} data-tauri-drag-region="false" className="fixed inset-0 z-[59]" />
           <div
+            data-tauri-drag-region="false"
             className="absolute right-0 top-[40px] z-[60] w-[320px] overflow-hidden rounded-[10px] border"
             style={{
               background: COLORS.bgSurface,
