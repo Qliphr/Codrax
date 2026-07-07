@@ -151,17 +151,14 @@ export function usePipeline() {
     [setPipelineStepState, proceedPastStep],
   );
 
-  /** Fires when the pipeline turn-completion sentinel is seen in stdout — auto-advances on
-   * success, stays put on failure so the user can inspect and hit Retry (same as a manual crash). */
-  const handleTurnDone = useCallback(
-    async (card: Card, exitCode: number, cwd?: string) => {
-      const stepIdx = currentStepIndex(card);
-      setPipelineStepState(card.id, stepIdx, exitCode === 0 ? "done" : "failed");
-      if (exitCode !== 0) return;
-      await proceedPastStep(card, stepIdx, cwd);
-    },
-    [setPipelineStepState, proceedPastStep],
-  );
+  /** Disabled: stdout sentinel-based turn detection is unreliable (fires before the agent has
+   * actually finished — e.g. a headless/print-mode CLI returning fast without completing the
+   * task), which was auto-advancing the pipeline while the agent was still working. Per
+   * CLAUDE.md roadmap, stdout-based auto-detection is a v2 item — steps now only advance via
+   * the manual `advance()` escape hatch. Real process crashes are still caught by
+   * `handleAgentExit`. Kept as a no-op (rather than ripping out the sentinel plumbing) so it's
+   * a one-line revert if auto-detection is revisited later. */
+  const handleTurnDone = useCallback(async (_card: Card, _exitCode: number, _cwd?: string) => {}, []);
 
   return {
     startAgent,
