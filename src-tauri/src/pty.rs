@@ -40,6 +40,7 @@ pub fn spawn_pty(
     registry: State<PtyRegistry>,
     terminal_id: String,
     cwd: Option<String>,
+    shell: Option<String>,
 ) -> Result<(), String> {
     let mut map = registry.0.lock().map_err(|e| e.to_string())?;
     if map.len() >= MAX_PTYS {
@@ -54,7 +55,9 @@ pub fn spawn_pty(
         .openpty(PtySize { rows: 24, cols: 80, pixel_width: 0, pixel_height: 0 })
         .map_err(|e| format!("could not allocate pty: {e}"))?;
 
-    let mut cmd = CommandBuilder::new(default_shell());
+    // Empty string from the settings UI ("System default") falls through to default_shell().
+    let shell_bin = shell.filter(|s| !s.trim().is_empty()).unwrap_or_else(default_shell);
+    let mut cmd = CommandBuilder::new(shell_bin);
     if let Some(dir) = cwd {
         cmd.cwd(crate::paths::expand_tilde(&dir));
     }

@@ -16,6 +16,7 @@ import { useKanbanStore } from "@/stores/kanban.store";
 import { useToastStore } from "@/stores/toast.store";
 import { useWorkspaceStore } from "@/stores/workspace.store";
 import { useNotificationStore } from "@/stores/notification.store";
+import { useSettingsStore } from "@/stores/settings.store";
 import { usePipeline } from "@/hooks/usePipeline";
 import { useAutoUpdate } from "@/hooks/useAutoUpdate";
 
@@ -59,6 +60,10 @@ export default function App() {
   useEffect(() => {
     hydrateWorkspaces();
   }, [hydrateWorkspaces]);
+
+  useEffect(() => {
+    void useSettingsStore.getState().hydrate();
+  }, []);
 
   useEffect(() => {
     if (!activeWorkspaceId && workspaces.length > 0) {

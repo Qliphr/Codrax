@@ -5,6 +5,7 @@ mod pipeline;
 mod preview;
 mod providers;
 mod pty;
+mod settings;
 mod storage;
 
 use pty::PtyRegistry;
@@ -40,6 +41,8 @@ pub fn run() {
             providers::load_custom_providers,
             providers::save_custom_providers,
             providers::detect_binaries,
+            settings::load_app_settings,
+            settings::save_app_settings,
         ])
         .build(tauri::generate_context!())
         .expect("error while building tauri application")

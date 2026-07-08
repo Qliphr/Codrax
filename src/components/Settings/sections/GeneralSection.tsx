@@ -1,11 +1,72 @@
 import { useState } from "react";
 import { COLORS } from "@/lib/theme";
 import { useWorkspaceStore } from "@/stores/workspace.store";
+import { useSettingsStore } from "@/stores/settings.store";
 import type { Workspace } from "@/lib/types";
 import { SettingRow } from "@/components/Settings/SettingRow";
 
 interface GeneralSectionProps {
   workspace: Workspace | undefined;
+}
+
+const SHELL_PRESETS = [
+  { label: "System default", value: "" },
+  { label: "zsh", value: "zsh" },
+  { label: "bash", value: "bash" },
+  { label: "fish", value: "fish" },
+  { label: "PowerShell (Windows)", value: "powershell.exe" },
+  { label: "Command Prompt (Windows)", value: "cmd.exe" },
+  { label: "Custom…", value: "__custom__" },
+];
+
+function TerminalSection() {
+  const terminalShell = useSettingsStore((s) => s.settings.terminalShell);
+  const setTerminalShell = useSettingsStore((s) => s.setTerminalShell);
+  const isPreset = SHELL_PRESETS.some((p) => p.value === (terminalShell ?? ""));
+  const [customMode, setCustomMode] = useState(!isPreset);
+  const [customDraft, setCustomDraft] = useState(terminalShell ?? "");
+
+  return (
+    <div>
+      <h3 className="mb-2.5 font-sans text-[11px] uppercase tracking-wider" style={{ color: COLORS.textMuted }}>
+        Terminal
+      </h3>
+      <div className="flex flex-col gap-2">
+        <SettingRow title="Shell" description="Binary spawned for new terminals — applies the next time one starts">
+          <div className="flex flex-col items-end gap-2">
+            <select
+              className="vos-input w-[220px]"
+              value={customMode ? "__custom__" : (terminalShell ?? "")}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (value === "__custom__") {
+                  setCustomMode(true);
+                  return;
+                }
+                setCustomMode(false);
+                setTerminalShell(value || undefined);
+              }}
+            >
+              {SHELL_PRESETS.map((p) => (
+                <option key={p.value || "default"} value={p.value}>
+                  {p.label}
+                </option>
+              ))}
+            </select>
+            {customMode && (
+              <input
+                className="vos-input w-[220px]"
+                placeholder="/opt/homebrew/bin/fish"
+                value={customDraft}
+                onChange={(e) => setCustomDraft(e.target.value)}
+                onBlur={() => setTerminalShell(customDraft.trim() || undefined)}
+              />
+            )}
+          </div>
+        </SettingRow>
+      </div>
+    </div>
+  );
 }
 
 export function GeneralSection({ workspace }: GeneralSectionProps) {
@@ -14,14 +75,19 @@ export function GeneralSection({ workspace }: GeneralSectionProps) {
 
   if (!workspace) {
     return (
-      <div className="py-10 text-center font-sans text-[12.5px]" style={{ color: COLORS.textDim }}>
-        No active workspace.
+      <div className="flex flex-col gap-5">
+        <TerminalSection />
+        <div className="py-6 text-center font-sans text-[12.5px]" style={{ color: COLORS.textDim }}>
+          No active workspace.
+        </div>
       </div>
     );
   }
 
   return (
     <div className="flex flex-col gap-5">
+      <TerminalSection />
+
       <div>
         <h3 className="mb-2.5 font-sans text-[11px] uppercase tracking-wider" style={{ color: COLORS.textMuted }}>
           Workspace

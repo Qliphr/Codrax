@@ -124,3 +124,15 @@ export function detectBinaries(clis: string[]): Promise<Record<string, boolean>>
 export function checkPathExists(path: string): Promise<boolean> {
   return invoke("check_path_exists", { path });
 }
+
+export interface AppSettings {
+  terminalShell?: string;
+}
+
+export function loadAppSettings(): Promise<AppSettings> {
+  return invoke("load_app_settings");
+}
+
+export function saveAppSettings(settings: AppSettings): Promise<void> {
+  return invoke("save_app_settings", { settings });
+}

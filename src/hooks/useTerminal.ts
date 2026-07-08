@@ -15,6 +15,8 @@ export interface SpawnConfig {
   cwd?: string;
   /** Sent to the shell right after spawn, e.g. the sanitized `claude "..."` invocation. */
   initialCommand?: string;
+  /** Shell binary override from Settings, e.g. "/bin/zsh" or "powershell.exe". Empty/unset → backend default. */
+  shell?: string;
 }
 
 interface UseTerminalOptions {
@@ -98,7 +100,7 @@ export function useTerminal({ terminalId, spawn, onExit, onCommandNotFound, onTu
 
       if (spawn) {
         try {
-          await invoke("spawn_pty", { terminalId, cwd: spawn.cwd });
+          await invoke("spawn_pty", { terminalId, cwd: spawn.cwd, shell: spawn.shell });
           if (spawn.initialCommand) {
             await invoke("write_pty", { terminalId, data: `${spawn.initialCommand}\n` });
           }

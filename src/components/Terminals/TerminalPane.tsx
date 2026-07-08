@@ -5,6 +5,7 @@ import type { Pane } from "@/stores/terminal.store";
 import { useTerminal } from "@/hooks/useTerminal";
 import { PipelineChips } from "@/components/PipelineChips";
 import { useToastStore } from "@/stores/toast.store";
+import { useSettingsStore } from "@/stores/settings.store";
 
 interface TerminalPaneProps {
   pane: Pane;
@@ -97,6 +98,7 @@ function TerminalPaneLive({
 }: TerminalPaneLiveProps) {
   const terminalId = pane.terminalId as string;
   const pushToast = useToastStore((s) => s.push);
+  const terminalShell = useSettingsStore((s) => s.settings.terminalShell);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const [justFinished, setJustFinished] = useState(false);
@@ -121,7 +123,7 @@ function TerminalPaneLive({
   }, [menuOpen]);
   const { containerRef } = useTerminal({
     terminalId,
-    spawn: { cwd: pane.cwd ?? undefined, initialCommand: pane.initialCommand || undefined },
+    spawn: { cwd: pane.cwd ?? undefined, initialCommand: pane.initialCommand || undefined, shell: terminalShell },
     onExit: (code) => card && onExit(card, code),
     onTurnDone: (code) => card && onTurnDone(card, code),
     onCommandNotFound: (binary) =>
