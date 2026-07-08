@@ -22,6 +22,7 @@ interface TopBarProps {
   onRelocateWorkspace: (id: string) => void;
   onRemoveWorkspace: (id: string) => void;
   activeCount: number;
+  onGoToTerminals: () => void;
   notifs: Notification[];
   notifsOpen: boolean;
   onToggleNotifs: () => void;
@@ -41,6 +42,7 @@ export function TopBar({
   onRelocateWorkspace,
   onRemoveWorkspace,
   activeCount,
+  onGoToTerminals,
   notifs,
   notifsOpen,
   onToggleNotifs,
@@ -187,9 +189,11 @@ export function TopBar({
 
       <div className="flex-1" />
 
-      <div
-        className="flex items-center gap-2 rounded-lg border px-2.5 py-1.5"
+      <button
+        onClick={onGoToTerminals}
+        className="flex items-center gap-2 rounded-lg border px-2.5 py-1.5 hover:bg-[#2C2725]"
         style={{ background: COLORS.bgPanel, borderColor: COLORS.borderSubtle }}
+        title="View active agents"
       >
         <span
           className="h-[7px] w-[7px] animate-[dotPulse_1.6s_ease-in-out_infinite] rounded-full"
@@ -198,7 +202,7 @@ export function TopBar({
         <span className="font-sans text-xs" style={{ color: COLORS.textSoft }}>
           {activeCount} agents active
         </span>
-      </div>
+      </button>
 
       <ActivityBar onToggleNotifs={onToggleNotifs} onOpenSettings={onOpenSettings} unreadCount={unreadCount} />
 

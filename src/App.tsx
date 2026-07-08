@@ -332,6 +332,7 @@ export default function App() {
         onRelocateWorkspace={(id) => void relocateWorkspace(id)}
         onRemoveWorkspace={removeWorkspace}
         activeCount={activeCount}
+        onGoToTerminals={() => setView("terminals")}
         notifs={notifsForTopBar}
         notifsOpen={notifsOpen}
         onToggleNotifs={() =>

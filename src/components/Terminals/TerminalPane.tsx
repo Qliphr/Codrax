@@ -103,6 +103,8 @@ function TerminalPaneLive({
   const menuRef = useRef<HTMLDivElement>(null);
   const [justFinished, setJustFinished] = useState(false);
   const wasDoneRef = useRef(status === "DONE");
+  const [justFailed, setJustFailed] = useState(false);
+  const wasFailedRef = useRef(status === "FAILED");
 
   useEffect(() => {
     const wasDone = wasDoneRef.current;
@@ -110,6 +112,15 @@ function TerminalPaneLive({
     if (status !== "DONE" || wasDone) return;
     setJustFinished(true);
     const t = setTimeout(() => setJustFinished(false), 1400);
+    return () => clearTimeout(t);
+  }, [status]);
+
+  useEffect(() => {
+    const wasFailed = wasFailedRef.current;
+    wasFailedRef.current = status === "FAILED";
+    if (status !== "FAILED" || wasFailed) return;
+    setJustFailed(true);
+    const t = setTimeout(() => setJustFailed(false), 1400);
     return () => clearTimeout(t);
   }, [status]);
 
@@ -132,7 +143,7 @@ function TerminalPaneLive({
 
   return (
     <div
-      className={`flex flex-col overflow-hidden rounded-lg border ${justFinished ? "pane-glow-done" : ""}`}
+      className={`flex flex-col overflow-hidden rounded-lg border ${justFinished ? "pane-glow-done" : justFailed ? "pane-glow-failed" : ""}`}
       style={{ borderColor: "#332D2A" }}
     >
       <div
