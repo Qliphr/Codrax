@@ -142,6 +142,13 @@ export default function App() {
     }
   }
 
+  function removeCommittedCard(card: Card) {
+    cancelDoneCleanup(card.id);
+    if (card.terminalId) void killTerminal(card.terminalId);
+    if (selectedCardId === card.id) setSelectedCardId(null);
+    deleteCard(card.id);
+  }
+
   async function runAutoCommit(card: Card) {
     if (!workspace) return;
 
@@ -170,9 +177,11 @@ export default function App() {
 
     if (result.kind === "nothingToCommit") {
       pushToast({ kind: "info", message: "Nothing to commit." });
+      removeCommittedCard(card);
     } else if (result.kind === "committed") {
       pushToast({ kind: "info", message: `Committed "${card.title}".` });
       pushNotification(`Committed "${card.title}".`, COLORS.textMuted);
+      removeCommittedCard(card);
     } else {
       // The card already stayed in Done — a failed commit never blocks the board.
       pushToast({

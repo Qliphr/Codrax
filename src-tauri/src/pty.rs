@@ -56,7 +56,7 @@ pub fn spawn_pty(
 
     let mut cmd = CommandBuilder::new(default_shell());
     if let Some(dir) = cwd {
-        cmd.cwd(dir);
+        cmd.cwd(crate::paths::expand_tilde(&dir));
     }
 
     let child = pair

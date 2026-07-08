@@ -1,12 +1,15 @@
 import { useEffect, useRef } from "react";
 import { Terminal } from "@xterm/xterm";
 import { FitAddon } from "@xterm/addon-fit";
-import { WebglAddon } from "@xterm/addon-webgl";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
 import "@xterm/xterm/css/xterm.css";
 import { COLORS } from "@/lib/theme";
 import { extractBinaryName, extractTurnDoneCode, isCommandNotFoundOutput } from "@/lib/shell";
+import { attachWebgl } from "@/lib/webglLifecycle";
+
+const FIT_DEBOUNCE_MS = 8;
+const PTY_RESIZE_DEBOUNCE_MS = 120;
 
 export interface SpawnConfig {
   cwd?: string;
@@ -48,16 +51,19 @@ export function useTerminal({ terminalId, spawn, onExit, onCommandNotFound, onTu
     });
     const fitAddon = new FitAddon();
     term.loadAddon(fitAddon);
-    try {
-      term.loadAddon(new WebglAddon());
-    } catch {
-      // WebGL unavailable (e.g. software rendering) — xterm falls back to the canvas renderer.
-    }
-    term.open(container);
-    fitAddon.fit();
-
+    const disposeWebgl = attachWebgl(term);
     let disposed = false;
     const unlistenFns: UnlistenFn[] = [];
+
+    term.open(container);
+    fitAddon.fit();
+    // Geist Mono is self-hosted and loads async — the first fit() above measures
+    // cells against the fallback font. Re-fit once the real font swaps in, or the
+    // grid stays permanently misaligned (glyphs overlapping/misspaced).
+    void document.fonts.ready.then(() => {
+      if (disposed) return;
+      fitAddon.fit();
+    });
 
     async function setup() {
       let notFoundChecked = false;
@@ -111,18 +117,37 @@ export function useTerminal({ terminalId, spawn, onExit, onCommandNotFound, onTu
     const dataDisposable = term.onData((data) => {
       invoke("write_pty", { terminalId, data }).catch((err) => console.error("write_pty failed", err));
     });
+
+    let ptyResizeTimer: ReturnType<typeof setTimeout> | null = null;
     const resizeDisposable = term.onResize(({ cols, rows }) => {
-      invoke("resize_pty", { terminalId, cols, rows }).catch((err) => console.error("resize_pty failed", err));
+      if (ptyResizeTimer) clearTimeout(ptyResizeTimer);
+      // Decoupled from fit() on purpose: a CLI TUI does a full repaint on SIGWINCH,
+      // so spamming resize_pty on every intermediate cell during a drag is wasteful.
+      ptyResizeTimer = setTimeout(() => {
+        ptyResizeTimer = null;
+        invoke("resize_pty", { terminalId, cols, rows }).catch((err) => console.error("resize_pty failed", err));
+      }, PTY_RESIZE_DEBOUNCE_MS);
     });
-    const resizeObserver = new ResizeObserver(() => fitAddon.fit());
+
+    let fitTimer: ReturnType<typeof setTimeout> | null = null;
+    const resizeObserver = new ResizeObserver(() => {
+      if (fitTimer) clearTimeout(fitTimer);
+      fitTimer = setTimeout(() => {
+        fitTimer = null;
+        fitAddon.fit();
+      }, FIT_DEBOUNCE_MS);
+    });
     resizeObserver.observe(container);
 
     return () => {
       disposed = true;
       resizeObserver.disconnect();
+      if (fitTimer) clearTimeout(fitTimer);
+      if (ptyResizeTimer) clearTimeout(ptyResizeTimer);
       dataDisposable.dispose();
       resizeDisposable.dispose();
       unlistenFns.forEach((unlisten) => unlisten());
+      disposeWebgl();
       term.dispose();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps

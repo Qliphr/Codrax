@@ -46,6 +46,7 @@ fn collect_changed_paths(repo: &Repository) -> Result<Vec<String>, String> {
 
 #[tauri::command]
 pub fn git_changed_paths(path: String) -> Result<Vec<String>, String> {
+    let path = crate::paths::expand_tilde(&path);
     let repo = match Repository::open(&path) {
         Ok(r) => r,
         Err(_) => return Ok(vec![]),
@@ -69,6 +70,7 @@ fn compute_ahead(repo: &Repository) -> Option<usize> {
 
 #[tauri::command]
 pub fn git_status(path: String) -> Result<GitStatusResponse, String> {
+    let path = crate::paths::expand_tilde(&path);
     let repo = match Repository::open(&path) {
         Ok(r) => r,
         Err(_) => return Ok(GitStatusResponse::NotARepo),
@@ -101,6 +103,7 @@ pub fn git_status(path: String) -> Result<GitStatusResponse, String> {
 /// Initializes a git repo at `path` — used when a workspace is added without one.
 #[tauri::command]
 pub fn init_repo(path: String) -> Result<(), String> {
+    let path = crate::paths::expand_tilde(&path);
     Repository::init(&path).map_err(|e| e.to_string())?;
     Ok(())
 }
@@ -120,6 +123,7 @@ pub enum CommitResponse {
 /// block the board on a git problem" rule.
 #[tauri::command]
 pub fn auto_commit(path: String, message: String, scope: Option<Vec<String>>) -> Result<CommitResponse, String> {
+    let path = crate::paths::expand_tilde(&path);
     let repo = Repository::open(&path).map_err(|e| format!("not a git repo: {e}"))?;
 
     let mut index = repo.index().map_err(|e| e.to_string())?;
@@ -204,6 +208,7 @@ pub enum GitLogResponse {
 /// without re-implementing graph layout in TS.
 #[tauri::command]
 pub fn git_log(path: String) -> Result<GitLogResponse, String> {
+    let path = crate::paths::expand_tilde(&path);
     let repo = match Repository::open(&path) {
         Ok(r) => r,
         Err(_) => return Ok(GitLogResponse::NotARepo),
@@ -290,6 +295,7 @@ pub enum PushResponse {
 /// for their own `git push`, so we don't reimplement credential callbacks.
 #[tauri::command]
 pub fn git_push(path: String) -> Result<PushResponse, String> {
+    let path = crate::paths::expand_tilde(&path);
     let run = |args: &[&str]| {
         std::process::Command::new("git").args(args).current_dir(&path).output()
     };

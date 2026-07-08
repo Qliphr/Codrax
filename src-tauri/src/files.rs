@@ -31,7 +31,7 @@ pub struct FileEntry {
 /// Relocate/Remove when a folder was deleted or renamed outside the app.
 #[tauri::command]
 pub fn check_path_exists(path: String) -> bool {
-    Path::new(&path).is_dir()
+    Path::new(&crate::paths::expand_tilde(&path)).is_dir()
 }
 
 /// Lists a workspace's file tree, flattened depth-first (dirs before files, alphabetical).
@@ -39,6 +39,7 @@ pub fn check_path_exists(path: String) -> bool {
 /// depth/entry count so a huge repo can't hang the sidebar.
 #[tauri::command]
 pub fn list_files(path: String, show_hidden: bool) -> Result<Vec<FileEntry>, String> {
+    let path = crate::paths::expand_tilde(&path);
     let root = Path::new(&path);
     if !root.is_dir() {
         return Ok(Vec::new());

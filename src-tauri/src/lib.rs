@@ -1,5 +1,6 @@
 mod files;
 mod git;
+mod paths;
 mod pipeline;
 mod preview;
 mod providers;

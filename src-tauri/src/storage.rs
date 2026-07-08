@@ -58,6 +58,8 @@ pub struct KanbanData {
 pub struct WorkspaceSettings {
     pub preview_port: u16,
     pub preview_url: Option<String>,
+    #[serde(default)]
+    pub show_hidden_files: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
