@@ -98,6 +98,14 @@ export function listFiles(path: string, showHidden: boolean): Promise<FileEntry[
   return invoke("list_files", { path, showHidden });
 }
 
+export function watchWorkspace(path: string): Promise<void> {
+  return invoke("watch_workspace", { path });
+}
+
+export function unwatchWorkspace(path: string): Promise<void> {
+  return invoke("unwatch_workspace", { path });
+}
+
 export interface CustomProvider {
   name: string;
   cli: string;

@@ -7,9 +7,11 @@ mod providers;
 mod pty;
 mod settings;
 mod storage;
+mod watcher;
 
 use pty::PtyRegistry;
 use tauri::Manager;
+use watcher::WatchRegistry;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -18,6 +20,7 @@ pub fn run() {
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_process::init())
         .manage(PtyRegistry::default())
+        .manage(WatchRegistry::default())
         .invoke_handler(tauri::generate_handler![
             storage::load_kanban,
             storage::save_kanban,
@@ -38,6 +41,8 @@ pub fn run() {
             preview::open_preview,
             files::list_files,
             files::check_path_exists,
+            watcher::watch_workspace,
+            watcher::unwatch_workspace,
             providers::load_custom_providers,
             providers::save_custom_providers,
             providers::detect_binaries,

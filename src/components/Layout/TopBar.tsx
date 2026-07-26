@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { Minus, Square, Copy, X } from "lucide-react";
 import { COLORS, accentDim, accentGlow } from "@/lib/theme";
-import { ResetIcon } from "@/lib/icons";
 import { ActivityBar } from "./ActivityBar";
 import type { Workspace } from "@/lib/types";
 
@@ -79,7 +78,6 @@ interface TopBarProps {
   onCloseNotifs: () => void;
   onClearNotifs: () => void;
   onOpenSettings: () => void;
-  onReset: () => void;
 }
 
 export function TopBar({
@@ -99,7 +97,6 @@ export function TopBar({
   onCloseNotifs,
   onClearNotifs,
   onOpenSettings,
-  onReset,
 }: TopBarProps) {
   const unreadCount = notifs.filter((n) => n.unread).length;
   const [switcherOpen, setSwitcherOpen] = useState(false);
@@ -315,17 +312,6 @@ export function TopBar({
           </div>
         </div>
       )}
-
-      <div className="h-[18px] w-px" style={{ background: "#3A3532" }} />
-
-      <button
-        onClick={onReset}
-        className="flex h-8 items-center gap-1.5 rounded-md border px-3 font-sans text-[12.5px] text-[#A39A90] hover:bg-[#2C2725] hover:text-[color:var(--color-text-primary)]"
-        style={{ borderColor: COLORS.borderSubtle, boxShadow: "0 1px 2px rgba(0,0,0,.3)" }}
-      >
-        <ResetIcon />
-        Reset
-      </button>
 
       {isWindows && <WindowControls />}
     </div>

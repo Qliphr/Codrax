@@ -350,7 +350,6 @@ export default function App() {
         onCloseNotifs={() => setNotifsOpen(false)}
         onClearNotifs={clearNotifications}
         onOpenSettings={() => setSettingsOpen(true)}
-        onReset={() => setActiveWorkspaceId(workspaces[0]?.id ?? null)}
       />
 
       {identityOk === false && (
