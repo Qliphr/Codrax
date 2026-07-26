@@ -55,11 +55,30 @@ pub struct KanbanData {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct AgentModelChoice {
+    pub preset: String,
+    #[serde(default)]
+    pub custom_command: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PipelineModels {
+    pub build: AgentModelChoice,
+    pub review: AgentModelChoice,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct WorkspaceSettings {
     pub preview_port: u16,
     pub preview_url: Option<String>,
     #[serde(default)]
     pub show_hidden_files: bool,
+    #[serde(default)]
+    pub pipeline_models: Option<PipelineModels>,
+    #[serde(default)]
+    pub review_enabled: Option<bool>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
