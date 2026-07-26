@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getCurrentWindow, PhysicalPosition } from "@tauri-apps/api/window";
+import { getCurrentWindow, PhysicalPosition, cursorPosition } from "@tauri-apps/api/window";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { MinusSignIcon, SquareIcon, Copy01Icon, Cancel01Icon } from "@hugeicons/core-free-icons";
 import { COLORS, accentDim, accentGlow } from "@/lib/theme";
@@ -115,7 +115,7 @@ export function TopBar({
 
     // Restore first so the window can follow the cursor like native apps, then
     // reposition so the cursor stays at the same relative X within the titlebar.
-    const cursor = await appWindow.cursorPosition();
+    const cursor = await cursorPosition();
     const sizeBefore = await appWindow.outerSize();
     const ratioX = sizeBefore.width > 0 ? cursor.x / sizeBefore.width : 0.5;
 
