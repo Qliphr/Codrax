@@ -1,19 +1,27 @@
 import { pipelineChipVisual } from "@/lib/theme";
-import { PIPELINE_STEP_NAMES, type PipelineStepState } from "@/lib/types";
+import { PIPELINE_STEP_NAMES, REVIEW_STEP_INDEX, isReviewEnabled, pipelineStepLabel, type PipelineStepState } from "@/lib/types";
+import { useWorkspaceStore } from "@/stores/workspace.store";
+import { useKanbanStore } from "@/stores/kanban.store";
 
 interface PipelineChipsProps {
   pipeline: PipelineStepState[];
 }
 
 export function PipelineChips({ pipeline }: PipelineChipsProps) {
+  const workspaceId = useKanbanStore((s) => s.workspaceId);
+  const settings = useWorkspaceStore((s) => s.workspaces.find((w) => w.id === workspaceId)?.settings);
+  const reviewEnabled = isReviewEnabled(settings);
+
   return (
     <div className="flex flex-wrap items-center gap-[5px]">
-      {PIPELINE_STEP_NAMES.map((name, i) => {
+      {PIPELINE_STEP_NAMES.map((_, i) => {
+        if (i === REVIEW_STEP_INDEX && !reviewEnabled) return null;
+        const name = pipelineStepLabel(i, settings);
         const state = pipeline[i];
         const visual = pipelineChipVisual(state);
         return (
           <span
-            key={name}
+            key={i}
             className="inline-flex items-center gap-[5px] whitespace-nowrap rounded-md px-2 py-[2px] font-sans text-[10px] font-medium leading-snug"
             style={{
               color: visual.color,

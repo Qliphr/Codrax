@@ -1,6 +1,8 @@
 import { COLORS, PRIORITY_COLORS, accentBorder, accentDim, pipelineChipVisual, withAlpha } from "@/lib/theme";
-import { COLUMN_KEYS, COLUMN_LABELS, PIPELINE_STEP_NAMES, type Card, type ColumnKey } from "@/lib/types";
+import { COLUMN_KEYS, COLUMN_LABELS, PIPELINE_STEP_NAMES, REVIEW_STEP_INDEX, isReviewEnabled, pipelineStepLabel, type Card, type ColumnKey } from "@/lib/types";
 import { usePresence } from "@/hooks/usePresence";
+import { useWorkspaceStore } from "@/stores/workspace.store";
+import { useKanbanStore } from "@/stores/kanban.store";
 
 interface CardDetailProps {
   card: Card | null;
@@ -13,10 +15,13 @@ interface CardDetailProps {
 
 export function CardDetail({ card, onClose, onMoveCard, onAdvance, onOpenInTerminal, onDelete }: CardDetailProps) {
   const { mounted, state } = usePresence(card !== null, 160);
+  const workspaceId = useKanbanStore((s) => s.workspaceId);
+  const settings = useWorkspaceStore((s) => s.workspaces.find((w) => w.id === workspaceId)?.settings);
   if (!mounted || !card) return null;
 
   const priorityColor = PRIORITY_COLORS[card.priority];
-  const allDone = card.pipeline.every((s) => s === "done");
+  const reviewEnabled = isReviewEnabled(settings);
+  const allDone = card.pipeline.every((s, i) => s === "done" || (i === REVIEW_STEP_INDEX && !reviewEnabled));
 
   return (
     <>
@@ -118,12 +123,14 @@ export function CardDetail({ card, onClose, onMoveCard, onAdvance, onOpenInTermi
               </button>
             </div>
             <div className="flex flex-col gap-2">
-              {PIPELINE_STEP_NAMES.map((name, i) => {
+              {PIPELINE_STEP_NAMES.map((_, i) => {
+                if (i === REVIEW_STEP_INDEX && !reviewEnabled) return null;
+                const name = pipelineStepLabel(i, settings);
                 const state = card.pipeline[i];
                 const visual = pipelineChipVisual(state);
                 return (
                   <div
-                    key={name}
+                    key={i}
                     className="flex items-center gap-2.5 rounded-md border px-3 py-2"
                     style={{ borderColor: COLORS.borderSubtle, background: COLORS.bgPanel }}
                   >

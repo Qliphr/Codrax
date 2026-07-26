@@ -1,8 +1,10 @@
 import { useDraggable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import { COLORS, PRIORITY_COLORS, withAlpha } from "@/lib/theme";
-import { PIPELINE_STEP_NAMES, type Card } from "@/lib/types";
+import { pipelineStepLabel, type Card } from "@/lib/types";
 import { PipelineChips } from "@/components/PipelineChips";
+import { useWorkspaceStore } from "@/stores/workspace.store";
+import { useKanbanStore } from "@/stores/kanban.store";
 
 interface KanbanCardProps {
   card: Card;
@@ -16,10 +18,13 @@ export function KanbanCard({ card, onClick, dragHandleDisabled }: KanbanCardProp
     disabled: dragHandleDisabled,
   });
 
+  const workspaceId = useKanbanStore((s) => s.workspaceId);
+  const settings = useWorkspaceStore((s) => s.workspaces.find((w) => w.id === workspaceId)?.settings);
+
   const priorityColor = PRIORITY_COLORS[card.priority];
   const failed = card.pipeline.includes("failed");
   const activeStepIdx = card.pipeline.indexOf("active");
-  const activeStepName = activeStepIdx >= 0 ? PIPELINE_STEP_NAMES[activeStepIdx] : null;
+  const activeStepName = activeStepIdx >= 0 ? pipelineStepLabel(activeStepIdx, settings) : null;
   const isDone = card.status === "done";
   const isRunning = card.status === "in-progress";
 

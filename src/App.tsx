@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { COLORS } from "@/lib/theme";
 import { autoCommit, checkGitIdentity, gitChangedPaths, openPreview } from "@/lib/tauri";
 import { timeAgo } from "@/lib/time";
-import { CLAUDE_STEP_INDEX, KIMI_STEP_INDEX, type Card, type ColumnKey, type Workspace } from "@/lib/types";
+import { BUILD_STEP_INDEX, REVIEW_STEP_INDEX, isReviewEnabled, type Card, type ColumnKey, type Workspace } from "@/lib/types";
 import { TopBar } from "@/components/Layout/TopBar";
 import { WelcomeScreen } from "@/components/Layout/WelcomeScreen";
 import { Sidebar, type BoardView } from "@/components/Sidebar/Sidebar";
@@ -40,7 +40,8 @@ export default function App() {
     relocateWorkspace,
     renameWorkspace,
   } = useWorkspaceStore();
-  const { cards, hydrate: hydrateKanban, moveCard, addCard, deleteCard, setBaselinePaths } = useKanbanStore();
+  const { cards, hydrate: hydrateKanban, moveCard, addCard, deleteCard, setBaselinePaths, setPipelineStepState } = useKanbanStore();
+  const workspace = workspaces.find((w) => w.id === activeWorkspaceId);
   const {
     startAgent,
     startFreeTerminal,
@@ -51,7 +52,7 @@ export default function App() {
     handleAgentExit,
     handleTurnDone,
     advance,
-  } = usePipeline();
+  } = usePipeline(workspace);
   const pushToast = useToastStore((s) => s.push);
   const { notifications, push: pushNotification, markAllRead, clear: clearNotifications } = useNotificationStore();
 
@@ -70,8 +71,6 @@ export default function App() {
       setActiveWorkspaceId(workspaces[0].id);
     }
   }, [workspaces, activeWorkspaceId]);
-
-  const workspace = workspaces.find((w) => w.id === activeWorkspaceId);
 
   useEffect(() => {
     if (workspace) hydrateKanban(workspace.id);
@@ -203,7 +202,12 @@ export default function App() {
     const card = cards.find((c) => c.id === cardId);
     if (!card || card.status === nextStatus) return;
 
-    if (card.status === "done" && nextStatus !== "done") {
+    // Review disabled in settings: treat a drop on "In Review" as a drop straight on "Done".
+    const skippingReview = nextStatus === "in-review" && !isReviewEnabled(workspace?.settings);
+    const effectiveStatus = skippingReview ? "done" : nextStatus;
+    if (card.status === effectiveStatus) return;
+
+    if (card.status === "done" && effectiveStatus !== "done") {
       cancelDoneCleanup(cardId);
     }
 
@@ -213,21 +217,22 @@ export default function App() {
       void stopAgent(card);
     }
 
-    moveCard(cardId, nextStatus);
+    moveCard(cardId, effectiveStatus);
 
     // Column drives which agent runs: In Progress always (re)starts Claude, In Review always (re)starts Kimi.
-    if (nextStatus === "in-progress") {
-      void startAgent(card, workspace?.path, CLAUDE_STEP_INDEX);
+    if (effectiveStatus === "in-progress") {
+      void startAgent(card, workspace?.path, BUILD_STEP_INDEX);
       if (workspace) {
         gitChangedPaths(workspace.path)
           .then((paths) => setBaselinePaths(cardId, paths))
           .catch(() => setBaselinePaths(cardId, null));
       }
     }
-    if (nextStatus === "in-review") {
-      void startAgent(card, workspace?.path, KIMI_STEP_INDEX);
+    if (effectiveStatus === "in-review") {
+      void startAgent(card, workspace?.path, REVIEW_STEP_INDEX);
     }
-    if (nextStatus === "done") {
+    if (effectiveStatus === "done") {
+      if (skippingReview) setPipelineStepState(cardId, REVIEW_STEP_INDEX, "done");
       scheduleDoneCleanup(card);
       void runAutoCommit(card);
     }

@@ -1,8 +1,55 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { getCurrentWindow } from "@tauri-apps/api/window";
+import { Minus, Square, Copy, X } from "lucide-react";
 import { COLORS, accentDim, accentGlow } from "@/lib/theme";
 import { ResetIcon } from "@/lib/icons";
 import { ActivityBar } from "./ActivityBar";
 import type { Workspace } from "@/lib/types";
+
+const appWindow = getCurrentWindow();
+
+function WindowControls() {
+  const [maximized, setMaximized] = useState(false);
+
+  useEffect(() => {
+    appWindow.isMaximized().then(setMaximized);
+    const unlisten = appWindow.onResized(() => {
+      appWindow.isMaximized().then(setMaximized);
+    });
+    return () => {
+      unlisten.then((fn) => fn());
+    };
+  }, []);
+
+  return (
+    <div data-tauri-drag-region="false" className="flex h-full items-stretch">
+      <button
+        onClick={() => appWindow.minimize()}
+        className="flex w-[46px] items-center justify-center hover:bg-[#2C2725]"
+        title="Minimize"
+      >
+        <Minus size={14} color="#A39A90" />
+      </button>
+      <button
+        onClick={async () => {
+          await appWindow.toggleMaximize();
+          setMaximized(await appWindow.isMaximized());
+        }}
+        className="flex w-[46px] items-center justify-center hover:bg-[#2C2725]"
+        title={maximized ? "Restore" : "Maximize"}
+      >
+        {maximized ? <Copy size={12} color="#A39A90" /> : <Square size={12} color="#A39A90" />}
+      </button>
+      <button
+        onClick={() => appWindow.close()}
+        className="flex w-[46px] items-center justify-center hover:bg-[#E81123]"
+        title="Close"
+      >
+        <X size={14} color="#A39A90" />
+      </button>
+    </div>
+  );
+}
 
 export interface Notification {
   id: string;
@@ -54,15 +101,17 @@ export function TopBar({
   const unreadCount = notifs.filter((n) => n.unread).length;
   const [switcherOpen, setSwitcherOpen] = useState(false);
   const isMac = typeof navigator !== "undefined" && /mac/i.test(navigator.platform);
+  const isWindows = typeof navigator !== "undefined" && /win/i.test(navigator.platform);
 
   return (
     <div
       data-tauri-drag-region="deep"
-      className="flex h-[46px] flex-none items-center gap-3.5 border-b px-3.5"
+      className="flex h-[46px] flex-none items-center gap-3.5 border-b pl-3.5"
       style={{
         borderColor: COLORS.borderSubtle,
         background: COLORS.bgSurface,
         paddingLeft: isMac ? "78px" : undefined,
+        paddingRight: isWindows ? 0 : "14px",
       }}
     >
       <div className="flex items-center gap-2">
@@ -275,6 +324,8 @@ export function TopBar({
         <ResetIcon />
         Reset
       </button>
+
+      {isWindows && <WindowControls />}
     </div>
   );
 }

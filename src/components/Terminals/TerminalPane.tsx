@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { COLORS } from "@/lib/theme";
-import { PIPELINE_STEP_NAMES, type Card, type ColumnKey } from "@/lib/types";
+import { REVIEW_STEP_INDEX, pipelineStepLabel, type Card, type ColumnKey } from "@/lib/types";
 import type { Pane } from "@/stores/terminal.store";
 import { useTerminal } from "@/hooks/useTerminal";
 import { PipelineChips } from "@/components/PipelineChips";
 import { useToastStore } from "@/stores/toast.store";
 import { useSettingsStore } from "@/stores/settings.store";
+import { useWorkspaceStore } from "@/stores/workspace.store";
+import { useKanbanStore } from "@/stores/kanban.store";
 
 interface TerminalPaneProps {
   pane: Pane;
@@ -22,6 +24,9 @@ function currentStepIndex(card: Card): number {
 }
 
 export function TerminalPane({ pane, card, onExit, onTurnDone, onManualClose, onMoveCard }: TerminalPaneProps) {
+  const workspaceId = useKanbanStore((s) => s.workspaceId);
+  const settings = useWorkspaceStore((s) => s.workspaces.find((w) => w.id === workspaceId)?.settings);
+
   if (!pane.terminalId) {
     return (
       <div
@@ -44,16 +49,17 @@ export function TerminalPane({ pane, card, onExit, onTurnDone, onManualClose, on
   }
 
   const stepIdx = card ? currentStepIndex(card) : -1;
-  const stepName = card ? PIPELINE_STEP_NAMES[stepIdx] : null;
+  const stepName = card ? pipelineStepLabel(stepIdx, settings) : null;
+  const isReviewStep = stepIdx === REVIEW_STEP_INDEX;
   const failed = card ? card.pipeline.includes("failed") : false;
   const done = card ? !failed && card.pipeline.every((s) => s === "done") : false;
-  const status = card ? (failed ? "FAILED" : done ? "DONE" : stepName === "Kimi" ? "REVIEW" : "RUNNING") : "SHELL";
+  const status = card ? (failed ? "FAILED" : done ? "DONE" : isReviewStep ? "REVIEW" : "RUNNING") : "SHELL";
   const statusColor = card
     ? failed
       ? "#FF4757"
       : done
         ? "#6BCB77"
-        : stepName === "Kimi"
+        : isReviewStep
           ? "#FFD166"
           : COLORS.accent
     : COLORS.textSecondary;
@@ -206,7 +212,13 @@ function TerminalPaneLive({
         </div>
       </div>
 
-      <div ref={containerRef} className="min-h-0 flex-1 px-2 py-1.5" style={{ background: COLORS.bgTermBody }} />
+      <div
+        ref={containerRef}
+        className="min-h-0 flex-1 px-2 py-1.5"
+        style={{
+          background: `radial-gradient(ellipse at 50% 0%, ${COLORS.bgTermHeader}55 0%, ${COLORS.bgTermBody} 70%)`,
+        }}
+      />
 
       <div
         className="flex h-[34px] flex-none items-center gap-1.5 border-t px-[11px]"

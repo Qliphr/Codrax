@@ -7,8 +7,57 @@ export type PipelineStepState = "idle" | "active" | "done" | "failed";
 export const PIPELINE_STEP_NAMES = ["Claude", "Kimi", "commit"] as const;
 
 /** Column → forced pipeline step: dropping a card here always (re)starts this agent. */
-export const CLAUDE_STEP_INDEX = PIPELINE_STEP_NAMES.indexOf("Claude");
-export const KIMI_STEP_INDEX = PIPELINE_STEP_NAMES.indexOf("Kimi");
+export const BUILD_STEP_INDEX = PIPELINE_STEP_NAMES.indexOf("Claude");
+export const REVIEW_STEP_INDEX = PIPELINE_STEP_NAMES.indexOf("Kimi");
+export const COMMIT_STEP_INDEX = PIPELINE_STEP_NAMES.indexOf("commit");
+
+export type AgentModelPresetId = "claude" | "kimi" | "codex" | "custom";
+
+export interface AgentModelPreset {
+  id: AgentModelPresetId;
+  label: string;
+  template: string;
+}
+
+export const AGENT_MODEL_PRESETS: AgentModelPreset[] = [
+  { id: "claude", label: "Claude", template: 'claude -p "{task}"' },
+  // -p assumed to mirror Claude's headless one-shot flag — verify against the real Kimi CLI.
+  { id: "kimi", label: "Kimi", template: 'kimi review -p "{task}"' },
+  // Command shape unverified — check the real Codex/GPT CLI's non-interactive flag before relying on this.
+  { id: "codex", label: "Codex / GPT", template: 'codex exec "{task}"' },
+  { id: "custom", label: "Custom", template: "" },
+];
+
+export interface AgentModelChoice {
+  preset: AgentModelPresetId;
+  /** Only read when preset === "custom" */
+  customCommand?: string;
+}
+
+export const DEFAULT_BUILD_MODEL: AgentModelChoice = { preset: "claude" };
+export const DEFAULT_REVIEW_MODEL: AgentModelChoice = { preset: "kimi" };
+
+export function resolveAgentTemplate(choice: AgentModelChoice | undefined, fallback: AgentModelChoice): string {
+  const c = choice ?? fallback;
+  if (c.preset === "custom") {
+    return c.customCommand?.trim() || AGENT_MODEL_PRESETS.find((p) => p.id === fallback.preset)!.template;
+  }
+  return AGENT_MODEL_PRESETS.find((p) => p.id === c.preset)?.template ?? "";
+}
+
+export function agentModelLabel(choice: AgentModelChoice | undefined, fallback: AgentModelChoice): string {
+  const c = choice ?? fallback;
+  return c.preset === "custom" ? "Custom" : (AGENT_MODEL_PRESETS.find((p) => p.id === c.preset)?.label ?? c.preset);
+}
+
+/** Display label for a pipeline chip/status: the configured model for build/review, else "commit". */
+export function pipelineStepLabel(stepIdx: number, settings: WorkspaceSettings | undefined): string {
+  if (stepIdx === COMMIT_STEP_INDEX) return "commit";
+  const models = settings?.pipelineModels;
+  const choice = stepIdx === BUILD_STEP_INDEX ? models?.build : models?.review;
+  const fallback = stepIdx === BUILD_STEP_INDEX ? DEFAULT_BUILD_MODEL : DEFAULT_REVIEW_MODEL;
+  return agentModelLabel(choice, fallback);
+}
 
 export const COLUMN_LABELS: Record<ColumnKey, string> = {
   todo: "To Do",
@@ -41,6 +90,18 @@ export interface WorkspaceSettings {
   previewPort: number;
   previewUrl?: string;
   showHiddenFiles?: boolean;
+  /** Which AI model/CLI each pipeline slot runs; unset falls back to Claude (build) / Kimi (review). */
+  pipelineModels?: {
+    build: AgentModelChoice;
+    review: AgentModelChoice;
+  };
+  /** Whether the review (Kimi) pipeline step is used. Unset means enabled. */
+  reviewEnabled?: boolean;
+}
+
+/** Whether the review pipeline step is active for a workspace; unset settings default to enabled. */
+export function isReviewEnabled(settings: WorkspaceSettings | undefined): boolean {
+  return settings?.reviewEnabled ?? true;
 }
 
 export interface Workspace {

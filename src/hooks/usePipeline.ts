@@ -2,14 +2,25 @@ import { useCallback, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { useKanbanStore } from "@/stores/kanban.store";
 import { useTerminalStore } from "@/stores/terminal.store";
-import { PIPELINE_STEP_NAMES, type Card } from "@/lib/types";
+import {
+  BUILD_STEP_INDEX,
+  COMMIT_STEP_INDEX,
+  DEFAULT_BUILD_MODEL,
+  DEFAULT_REVIEW_MODEL,
+  resolveAgentTemplate,
+  type Card,
+  type Workspace,
+} from "@/lib/types";
 
-const STEP_COMMANDS: Record<(typeof PIPELINE_STEP_NAMES)[number], string> = {
-  Claude: 'claude -p "{task}"',
-  // -p assumed to mirror Claude's headless one-shot flag — verify against the real Kimi CLI.
-  Kimi: 'kimi review -p "{task}"',
-  commit: 'git add . && git commit -m "{task}"',
-};
+const COMMIT_TEMPLATE = 'git add . && git commit -m "{task}"';
+
+function templateForStep(stepIdx: number, workspace: Workspace | undefined): string {
+  if (stepIdx === COMMIT_STEP_INDEX) return COMMIT_TEMPLATE;
+  const models = workspace?.settings.pipelineModels;
+  const choice = stepIdx === BUILD_STEP_INDEX ? models?.build : models?.review;
+  const fallback = stepIdx === BUILD_STEP_INDEX ? DEFAULT_BUILD_MODEL : DEFAULT_REVIEW_MODEL;
+  return resolveAgentTemplate(choice, fallback);
+}
 
 const DONE_KEEPALIVE_MS = 30_000;
 
@@ -19,7 +30,7 @@ function currentStepIndex(card: Card): number {
 }
 
 /** Orchestrates the agent pipeline: spawning/killing PTYs in step with card lifecycle. */
-export function usePipeline() {
+export function usePipeline(workspace?: Workspace) {
   const setCardTerminal = useKanbanStore((s) => s.setCardTerminal);
   const setPipelineStepState = useKanbanStore((s) => s.setPipelineStepState);
   const assignPane = useTerminalStore((s) => s.assignPane);
@@ -37,8 +48,7 @@ export function usePipeline() {
   const startAgent = useCallback(
     async (card: Card, cwd?: string, stepIdxOverride?: number) => {
       const stepIdx = stepIdxOverride ?? currentStepIndex(card);
-      const stepName = PIPELINE_STEP_NAMES[stepIdx];
-      const template = STEP_COMMANDS[stepName];
+      const template = templateForStep(stepIdx, workspace);
       const terminalId = crypto.randomUUID();
 
       let command: string;
@@ -64,7 +74,7 @@ export function usePipeline() {
       setCardTerminal(card.id, terminalId);
       setPipelineStepState(card.id, stepIdx, "active");
     },
-    [assignPane, setCardTerminal, setPipelineStepState],
+    [assignPane, setCardTerminal, setPipelineStepState, workspace],
   );
 
   const startFreeTerminal = useCallback(

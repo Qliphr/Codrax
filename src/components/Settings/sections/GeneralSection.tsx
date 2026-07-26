@@ -2,7 +2,13 @@ import { useState } from "react";
 import { COLORS } from "@/lib/theme";
 import { useWorkspaceStore } from "@/stores/workspace.store";
 import { useSettingsStore } from "@/stores/settings.store";
-import type { Workspace } from "@/lib/types";
+import {
+  AGENT_MODEL_PRESETS,
+  DEFAULT_BUILD_MODEL,
+  DEFAULT_REVIEW_MODEL,
+  type AgentModelChoice,
+  type Workspace,
+} from "@/lib/types";
 import { SettingRow } from "@/components/Settings/SettingRow";
 
 interface GeneralSectionProps {
@@ -69,6 +75,103 @@ function TerminalSection() {
   );
 }
 
+function ModelPicker({
+  label,
+  description,
+  choice,
+  fallback,
+  onChange,
+}: {
+  label: string;
+  description: string;
+  choice: AgentModelChoice | undefined;
+  fallback: AgentModelChoice;
+  onChange: (choice: AgentModelChoice) => void;
+}) {
+  const preset = choice?.preset ?? fallback.preset;
+  const [customDraft, setCustomDraft] = useState(choice?.customCommand ?? "");
+
+  return (
+    <SettingRow title={label} description={description}>
+      <div className="flex flex-col items-end gap-2">
+        <select
+          className="vos-input w-[220px]"
+          value={preset}
+          onChange={(e) => onChange({ preset: e.target.value as AgentModelChoice["preset"], customCommand: customDraft })}
+        >
+          {AGENT_MODEL_PRESETS.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.label}
+            </option>
+          ))}
+        </select>
+        {preset === "custom" && (
+          <input
+            className="vos-input w-[220px]"
+            placeholder='mycli run "{task}"'
+            value={customDraft}
+            onChange={(e) => setCustomDraft(e.target.value)}
+            onBlur={() => onChange({ preset: "custom", customCommand: customDraft.trim() })}
+          />
+        )}
+      </div>
+    </SettingRow>
+  );
+}
+
+function PipelineSection({ workspace }: { workspace: Workspace }) {
+  const updateWorkspaceSettings = useWorkspaceStore((s) => s.updateWorkspaceSettings);
+  const models = workspace.settings.pipelineModels;
+  const reviewEnabled = workspace.settings.reviewEnabled ?? true;
+
+  function setBuild(choice: AgentModelChoice) {
+    updateWorkspaceSettings(workspace.id, {
+      pipelineModels: { build: choice, review: models?.review ?? DEFAULT_REVIEW_MODEL },
+    });
+  }
+
+  function setReview(choice: AgentModelChoice) {
+    updateWorkspaceSettings(workspace.id, {
+      pipelineModels: { build: models?.build ?? DEFAULT_BUILD_MODEL, review: choice },
+    });
+  }
+
+  return (
+    <div>
+      <h3 className="mb-2.5 font-sans text-[11px] uppercase tracking-wider" style={{ color: COLORS.textMuted }}>
+        Pipeline
+      </h3>
+      <div className="flex flex-col gap-2">
+        <ModelPicker
+          label="Build step"
+          description="Model/CLI run when a task enters In Progress"
+          choice={models?.build}
+          fallback={DEFAULT_BUILD_MODEL}
+          onChange={setBuild}
+        />
+        <SettingRow title="Review step" description="Run a review agent when a task enters In Review — off skips straight to Done">
+          <input
+            type="checkbox"
+            className="size-4 accent-current"
+            style={{ color: COLORS.textPrimary }}
+            checked={reviewEnabled}
+            onChange={(e) => updateWorkspaceSettings(workspace.id, { reviewEnabled: e.target.checked })}
+          />
+        </SettingRow>
+        {reviewEnabled && (
+          <ModelPicker
+            label="Review model"
+            description="Model/CLI run when a task enters In Review"
+            choice={models?.review}
+            fallback={DEFAULT_REVIEW_MODEL}
+            onChange={setReview}
+          />
+        )}
+      </div>
+    </div>
+  );
+}
+
 export function GeneralSection({ workspace }: GeneralSectionProps) {
   const updateWorkspaceSettings = useWorkspaceStore((s) => s.updateWorkspaceSettings);
   const [urlDraft, setUrlDraft] = useState(workspace?.settings.previewUrl ?? "");
@@ -105,6 +208,8 @@ export function GeneralSection({ workspace }: GeneralSectionProps) {
           </SettingRow>
         </div>
       </div>
+
+      <PipelineSection workspace={workspace} />
 
       <div>
         <h3 className="mb-2.5 font-sans text-[11px] uppercase tracking-wider" style={{ color: COLORS.textMuted }}>
