@@ -375,6 +375,7 @@ export default function App() {
             <KanbanBoard
               cards={cards}
               activeCount={activeCount}
+              reviewEnabled={isReviewEnabled(workspace?.settings)}
               onCreateTask={(column) => setNewTaskColumn(column)}
               onMoveCard={handleMoveCard}
               onCardClick={(card) => setSelectedCardId(card.id)}

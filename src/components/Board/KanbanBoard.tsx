@@ -55,15 +55,17 @@ function sortCards(cards: Card[], sortBy: SortKey): Card[] {
 interface KanbanBoardProps {
   cards: Card[];
   activeCount: number;
+  reviewEnabled: boolean;
   onCreateTask: (column: ColumnKey) => void;
   onMoveCard: (cardId: string, status: ColumnKey) => void;
   onCardClick?: (card: Card) => void;
 }
 
-export function KanbanBoard({ cards, activeCount, onCreateTask, onMoveCard, onCardClick }: KanbanBoardProps) {
+export function KanbanBoard({ cards, activeCount, reviewEnabled, onCreateTask, onMoveCard, onCardClick }: KanbanBoardProps) {
   const [draggingCard, setDraggingCard] = useState<Card | null>(null);
   const [sortBy, setSortBy] = useState<SortKey>("manual");
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
+  const columnDefs = reviewEnabled ? COLUMN_DEFS : COLUMN_DEFS.filter((c) => c.key !== "in-review");
 
   function handleDragStart(event: DragStartEvent) {
     const card = cards.find((c) => c.id === event.active.id);
@@ -113,8 +115,11 @@ export function KanbanBoard({ cards, activeCount, onCreateTask, onMoveCard, onCa
       </div>
 
       <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-        <div className="flex min-h-0 flex-1 justify-between gap-3.5 overflow-x-auto px-12 py-4">
-          {COLUMN_DEFS.map((col) => (
+        <div
+          className="flex min-h-0 flex-1 justify-center overflow-x-auto px-12 py-4"
+          style={{ gap: "clamp(14px, 4vw, 100px)" }}
+        >
+          {columnDefs.map((col) => (
             <KanbanColumn
               key={col.key}
               column={col}

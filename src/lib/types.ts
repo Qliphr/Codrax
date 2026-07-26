@@ -37,6 +37,14 @@ export interface AgentModelChoice {
 export const DEFAULT_BUILD_MODEL: AgentModelChoice = { preset: "claude" };
 export const DEFAULT_REVIEW_MODEL: AgentModelChoice = { preset: "kimi" };
 
+/** CLI binary each preset requires — used to filter picker options by detection. */
+export const AGENT_MODEL_PRESET_CLI: Record<AgentModelPresetId, string | null> = {
+  claude: "claude",
+  kimi: "kimi",
+  codex: "codex",
+  custom: null,
+};
+
 export function resolveAgentTemplate(choice: AgentModelChoice | undefined, fallback: AgentModelChoice): string {
   const c = choice ?? fallback;
   if (c.preset === "custom") {

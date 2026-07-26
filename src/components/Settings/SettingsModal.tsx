@@ -75,7 +75,7 @@ export function SettingsModal({ open, onClose, workspace }: SettingsModalProps) 
 
         <div className="flex-1 overflow-y-auto px-6 py-5">
           {active === "general" && <GeneralSection workspace={workspace} />}
-          {active === "providers" && <ProvidersSection />}
+          {active === "providers" && <ProvidersSection workspace={workspace} />}
           {active === "shortcuts" && <ShortcutsSection />}
           {active === "about" && <AboutSection />}
         </div>

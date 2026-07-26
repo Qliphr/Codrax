@@ -5,6 +5,7 @@ export interface KnownProvider {
 
 export const KNOWN_PROVIDERS: KnownProvider[] = [
   { name: "Claude Code", cli: "claude" },
+  { name: "Kimi", cli: "kimi" },
   { name: "Codex", cli: "codex" },
   { name: "Gemini", cli: "gemini" },
   { name: "Grok", cli: "grok" },

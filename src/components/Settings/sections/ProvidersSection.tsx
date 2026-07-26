@@ -1,9 +1,128 @@
 import { useEffect, useState } from "react";
 import { COLORS, accentBorder, accentDim } from "@/lib/theme";
 import { useProviderStore } from "@/stores/provider.store";
+import { useWorkspaceStore } from "@/stores/workspace.store";
+import {
+  AGENT_MODEL_PRESETS,
+  AGENT_MODEL_PRESET_CLI,
+  DEFAULT_BUILD_MODEL,
+  DEFAULT_REVIEW_MODEL,
+  type AgentModelChoice,
+  type Workspace,
+} from "@/lib/types";
+import { SettingRow } from "@/components/Settings/SettingRow";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-export function ProvidersSection() {
-  const { hydrate, loading, addCustom, rows } = useProviderStore();
+function ModelPicker({
+  label,
+  description,
+  choice,
+  fallback,
+  detected,
+  onChange,
+}: {
+  label: string;
+  description: string;
+  choice: AgentModelChoice | undefined;
+  fallback: AgentModelChoice;
+  detected: Record<string, boolean>;
+  onChange: (choice: AgentModelChoice) => void;
+}) {
+  const preset = choice?.preset ?? fallback.preset;
+  const [customDraft, setCustomDraft] = useState(choice?.customCommand ?? "");
+
+  const availablePresets = AGENT_MODEL_PRESETS.filter((p) => {
+    const cli = AGENT_MODEL_PRESET_CLI[p.id];
+    return cli === null || detected[cli] || p.id === preset;
+  });
+
+  return (
+    <SettingRow title={label} description={description}>
+      <div className="flex flex-col items-end gap-2">
+        <Select
+          value={preset}
+          onValueChange={(value) => onChange({ preset: value as AgentModelChoice["preset"], customCommand: customDraft })}
+        >
+          <SelectTrigger className="w-[220px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {availablePresets.map((p) => (
+              <SelectItem key={p.id} value={p.id}>
+                {p.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {preset === "custom" && (
+          <input
+            className="vos-input w-[220px]"
+            placeholder='mycli run "{task}"'
+            value={customDraft}
+            onChange={(e) => setCustomDraft(e.target.value)}
+            onBlur={() => onChange({ preset: "custom", customCommand: customDraft.trim() })}
+          />
+        )}
+      </div>
+    </SettingRow>
+  );
+}
+
+function PipelineSection({ workspace, detected }: { workspace: Workspace; detected: Record<string, boolean> }) {
+  const updateWorkspaceSettings = useWorkspaceStore((s) => s.updateWorkspaceSettings);
+  const models = workspace.settings.pipelineModels;
+  const reviewEnabled = workspace.settings.reviewEnabled ?? true;
+
+  function setBuild(choice: AgentModelChoice) {
+    updateWorkspaceSettings(workspace.id, {
+      pipelineModels: { build: choice, review: models?.review ?? DEFAULT_REVIEW_MODEL },
+    });
+  }
+
+  function setReview(choice: AgentModelChoice) {
+    updateWorkspaceSettings(workspace.id, {
+      pipelineModels: { build: models?.build ?? DEFAULT_BUILD_MODEL, review: choice },
+    });
+  }
+
+  return (
+    <div>
+      <h3 className="mb-2.5 font-sans text-[11px] uppercase tracking-wider" style={{ color: COLORS.textMuted }}>
+        Pipeline
+      </h3>
+      <div className="flex flex-col gap-2">
+        <ModelPicker
+          label="Build step"
+          description="Model/CLI run when a task enters In Progress"
+          choice={models?.build}
+          fallback={DEFAULT_BUILD_MODEL}
+          detected={detected}
+          onChange={setBuild}
+        />
+        <SettingRow title="Review step" description="Run a review agent when a task enters In Review — off skips straight to Done">
+          <Checkbox
+            checked={reviewEnabled}
+            onCheckedChange={(checked) => updateWorkspaceSettings(workspace.id, { reviewEnabled: checked === true })}
+          />
+        </SettingRow>
+        {reviewEnabled && (
+          <ModelPicker
+            label="Review model"
+            description="Model/CLI run when a task enters In Review"
+            choice={models?.review}
+            fallback={DEFAULT_REVIEW_MODEL}
+            detected={detected}
+            onChange={setReview}
+          />
+        )}
+      </div>
+    </div>
+  );
+}
+
+export function ProvidersSection({ workspace }: { workspace: Workspace | undefined }) {
+  const { hydrate, loading, addCustom, rows, detected } = useProviderStore();
   const [name, setName] = useState("");
   const [cli, setCli] = useState("");
 
@@ -16,6 +135,8 @@ export function ProvidersSection() {
 
   return (
     <div className="flex flex-col gap-3">
+      {workspace && <PipelineSection workspace={workspace} detected={detected} />}
+
       <div className="flex items-center gap-2">
         <h3 className="font-sans text-[11px] uppercase tracking-wider" style={{ color: COLORS.textMuted }}>
           Detected AI CLIs
