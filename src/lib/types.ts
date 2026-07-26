@@ -20,11 +20,15 @@ export interface AgentModelPreset {
 }
 
 export const AGENT_MODEL_PRESETS: AgentModelPreset[] = [
-  { id: "claude", label: "Claude", template: 'claude -p "{task}"' },
+  // {task}/{description}/{prev_output} are substituted with an already shell-quoted
+  // value (see escape_for_platform in pipeline.rs) — templates must NOT wrap the
+  // placeholder in quotes themselves, or the literal quote characters end up inside
+  // the argument (e.g. `"'fix bug'"` on Windows instead of a clean `fix bug`).
+  { id: "claude", label: "Claude", template: "claude -p {task}" },
   // -p assumed to mirror Claude's headless one-shot flag — verify against the real Kimi CLI.
-  { id: "kimi", label: "Kimi", template: 'kimi review -p "{task}"' },
+  { id: "kimi", label: "Kimi", template: "kimi review -p {task}" },
   // Command shape unverified — check the real Codex/GPT CLI's non-interactive flag before relying on this.
-  { id: "codex", label: "Codex / GPT", template: 'codex exec "{task}"' },
+  { id: "codex", label: "Codex / GPT", template: "codex exec {task}" },
   { id: "custom", label: "Custom", template: "" },
 ];
 

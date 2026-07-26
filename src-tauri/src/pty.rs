@@ -42,6 +42,8 @@ pub fn spawn_pty(
     terminal_id: String,
     cwd: Option<String>,
     shell: Option<String>,
+    cols: Option<u16>,
+    rows: Option<u16>,
 ) -> Result<(), String> {
     let mut map = registry.0.lock().map_err(|e| e.to_string())?;
     if map.len() >= MAX_PTYS {
@@ -53,7 +55,12 @@ pub fn spawn_pty(
 
     let pty_system = native_pty_system();
     let pair = pty_system
-        .openpty(PtySize { rows: 24, cols: 80, pixel_width: 0, pixel_height: 0 })
+        .openpty(PtySize {
+            rows: rows.unwrap_or(24),
+            cols: cols.unwrap_or(80),
+            pixel_width: 0,
+            pixel_height: 0,
+        })
         .map_err(|e| format!("could not allocate pty: {e}"))?;
 
     // Empty string from the settings UI ("System default") falls through to default_shell().

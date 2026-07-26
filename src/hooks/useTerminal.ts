@@ -81,13 +81,6 @@ export function useTerminal({ terminalId, spawn, onExit, onCommandNotFound, onTu
 
     term.open(container);
     fitAddon.fit();
-    // Geist Mono is self-hosted and loads async — the first fit() above measures
-    // cells against the fallback font. Re-fit once the real font swaps in, or the
-    // grid stays permanently misaligned (glyphs overlapping/misspaced).
-    void document.fonts.ready.then(() => {
-      if (disposed) return;
-      fitAddon.fit();
-    });
 
     async function setup() {
       let notFoundChecked = false;
@@ -120,9 +113,23 @@ export function useTerminal({ terminalId, spawn, onExit, onCommandNotFound, onTu
       }
       unlistenFns.push(unlistenOutput, unlistenExit);
 
+      // Geist Mono is self-hosted and loads async — a fit() against the fallback
+      // font before it swaps in measures the wrong cell size, so the PTY (and any
+      // TUI it draws, e.g. `claude`) gets spawned at dims that don't match the grid.
+      // Re-fit here, right before spawn, so the size handed to the backend is final.
+      await document.fonts.ready;
+      if (disposed) return;
+      fitAddon.fit();
+
       if (spawn) {
         try {
-          await invoke("spawn_pty", { terminalId, cwd: spawn.cwd, shell: spawn.shell });
+          await invoke("spawn_pty", {
+            terminalId,
+            cwd: spawn.cwd,
+            shell: spawn.shell,
+            cols: term.cols,
+            rows: term.rows,
+          });
           if (spawn.initialCommand) {
             await invoke("write_pty", { terminalId, data: `${spawn.initialCommand}\n` });
           }

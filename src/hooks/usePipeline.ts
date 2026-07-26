@@ -12,7 +12,7 @@ import {
   type Workspace,
 } from "@/lib/types";
 
-const COMMIT_TEMPLATE = 'git add . && git commit -m "{task}"';
+const COMMIT_TEMPLATE = "git add . && git commit -m {task}";
 
 function templateForStep(stepIdx: number, workspace: Workspace | undefined): string {
   if (stepIdx === COMMIT_STEP_INDEX) return COMMIT_TEMPLATE;

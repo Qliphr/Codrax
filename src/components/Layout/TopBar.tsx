@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getCurrentWindow } from "@tauri-apps/api/window";
+import { getCurrentWindow, PhysicalPosition } from "@tauri-apps/api/window";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { MinusSignIcon, SquareIcon, Copy01Icon, Cancel01Icon } from "@hugeicons/core-free-icons";
 import { COLORS, accentDim, accentGlow } from "@/lib/theme";
@@ -108,9 +108,30 @@ export function TopBar({
   const isMac = typeof navigator !== "undefined" && /mac/i.test(navigator.platform);
   const isWindows = typeof navigator !== "undefined" && /win/i.test(navigator.platform);
 
+  const handleTopBarMouseDown = async (e: React.MouseEvent) => {
+    if (e.button !== 0) return;
+    if ((e.target as HTMLElement).closest('[data-tauri-drag-region="false"]')) return;
+    if (!(await appWindow.isMaximized())) return;
+
+    // Restore first so the window can follow the cursor like native apps, then
+    // reposition so the cursor stays at the same relative X within the titlebar.
+    const cursor = await appWindow.cursorPosition();
+    const sizeBefore = await appWindow.outerSize();
+    const ratioX = sizeBefore.width > 0 ? cursor.x / sizeBefore.width : 0.5;
+
+    await appWindow.unmaximize();
+
+    const sizeAfter = await appWindow.outerSize();
+    await appWindow.setPosition(
+      new PhysicalPosition(cursor.x - sizeAfter.width * ratioX, 0)
+    );
+    appWindow.startDragging();
+  };
+
   return (
     <div
       data-tauri-drag-region="deep"
+      onMouseDown={handleTopBarMouseDown}
       className="flex h-[46px] flex-none items-center gap-3.5 border-b px-3.5"
       style={{
         borderColor: COLORS.borderSubtle,

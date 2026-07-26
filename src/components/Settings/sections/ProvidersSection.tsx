@@ -58,7 +58,7 @@ function ModelPicker({
         {preset === "custom" && (
           <input
             className="vos-input w-[220px]"
-            placeholder='mycli run "{task}"'
+            placeholder="mycli run {task}"
             value={customDraft}
             onChange={(e) => setCustomDraft(e.target.value)}
             onBlur={() => onChange({ preset: "custom", customCommand: customDraft.trim() })}
