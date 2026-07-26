@@ -5,6 +5,7 @@ import { TerminalPane } from "./TerminalPane";
 
 interface TerminalGridProps {
   cards: Card[];
+  activeWorkspaceId: string;
   onExit: (card: Card, exitCode: number) => void;
   onTurnDone: (card: Card, exitCode: number) => void;
   onManualClose: (card: Card | null, terminalId: string) => void;
@@ -12,8 +13,19 @@ interface TerminalGridProps {
   onMoveCard: (cardId: string, status: ColumnKey) => void;
 }
 
-export function TerminalGrid({ cards, onExit, onTurnDone, onManualClose, onNewTerminal, onMoveCard }: TerminalGridProps) {
-  const panes = useTerminalStore((s) => s.panes);
+export function TerminalGrid({
+  cards,
+  activeWorkspaceId,
+  onExit,
+  onTurnDone,
+  onManualClose,
+  onNewTerminal,
+  onMoveCard,
+}: TerminalGridProps) {
+  const allPanes = useTerminalStore((s) => s.panes);
+  // Idle panes have no workspaceId yet — they belong to whichever workspace claims them next,
+  // so they stay visible everywhere. Running panes only show in the workspace that started them.
+  const panes = allPanes.filter((p) => p.workspaceId === null || p.workspaceId === activeWorkspaceId);
   const runningCount = panes.filter((p) => p.terminalId !== null).length;
   const hasIdlePane = panes.some((p) => p.terminalId === null);
 

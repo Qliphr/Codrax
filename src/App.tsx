@@ -392,6 +392,7 @@ export default function App() {
           <div className={`flex min-h-0 flex-1 flex-col ${view === "terminals" ? "" : "hidden"}`}>
             <TerminalGrid
               cards={cards}
+              activeWorkspaceId={workspace.id}
               onExit={handleAgentExitEvent}
               onTurnDone={handleTurnDoneEvent}
               onManualClose={handleManualClose}

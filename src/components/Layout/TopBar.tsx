@@ -22,30 +22,33 @@ function WindowControls() {
   }, []);
 
   return (
-    <div data-tauri-drag-region="false" className="flex h-full items-stretch">
+    <div data-tauri-drag-region="false" className="flex items-center gap-2">
       <button
         onClick={() => appWindow.minimize()}
-        className="flex w-[46px] items-center justify-center hover:bg-[#2C2725]"
+        className="flex h-8 w-8 items-center justify-center rounded-md border text-[#A39A90] transition-colors hover:bg-[#2C2725] hover:text-[color:var(--color-text-primary)]"
+        style={{ borderColor: COLORS.borderSubtle, boxShadow: "0 1px 2px rgba(0,0,0,.3)" }}
         title="Minimize"
       >
-        <Minus size={14} color="#A39A90" />
+        <Minus size={14} />
       </button>
       <button
         onClick={async () => {
           await appWindow.toggleMaximize();
           setMaximized(await appWindow.isMaximized());
         }}
-        className="flex w-[46px] items-center justify-center hover:bg-[#2C2725]"
+        className="flex h-8 w-8 items-center justify-center rounded-md border text-[#A39A90] transition-colors hover:bg-[#2C2725] hover:text-[color:var(--color-text-primary)]"
+        style={{ borderColor: COLORS.borderSubtle, boxShadow: "0 1px 2px rgba(0,0,0,.3)" }}
         title={maximized ? "Restore" : "Maximize"}
       >
-        {maximized ? <Copy size={12} color="#A39A90" /> : <Square size={12} color="#A39A90" />}
+        {maximized ? <Copy size={12} /> : <Square size={12} />}
       </button>
       <button
         onClick={() => appWindow.close()}
-        className="flex w-[46px] items-center justify-center hover:bg-[#E81123]"
+        className="flex h-8 w-8 items-center justify-center rounded-md border text-[#A39A90] transition-colors hover:bg-[#2C2725] hover:text-[color:var(--color-text-primary)]"
+        style={{ borderColor: COLORS.borderSubtle, boxShadow: "0 1px 2px rgba(0,0,0,.3)" }}
         title="Close"
       >
-        <X size={14} color="#A39A90" />
+        <X size={14} />
       </button>
     </div>
   );
@@ -106,12 +109,11 @@ export function TopBar({
   return (
     <div
       data-tauri-drag-region="deep"
-      className="flex h-[46px] flex-none items-center gap-3.5 border-b pl-3.5"
+      className="flex h-[46px] flex-none items-center gap-3.5 border-b px-3.5"
       style={{
         borderColor: COLORS.borderSubtle,
         background: COLORS.bgSurface,
         paddingLeft: isMac ? "78px" : undefined,
-        paddingRight: isWindows ? 0 : "14px",
       }}
     >
       <div className="flex items-center gap-2">

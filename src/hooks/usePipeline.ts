@@ -66,7 +66,7 @@ export function usePipeline(workspace?: Workspace) {
 
       // Only assign (and thus mount) the pane once the command is fully resolved —
       // mounting earlier with a placeholder would spawn the shell before we know what to type.
-      const paneNum = assignPane(card.id, terminalId, command, cwd ?? null);
+      const paneNum = assignPane(card.id, terminalId, command, cwd ?? null, workspace?.id ?? null);
       if (paneNum === null) {
         console.warn("no idle terminal pane available");
         return;
@@ -80,13 +80,13 @@ export function usePipeline(workspace?: Workspace) {
   const startFreeTerminal = useCallback(
     (cwd?: string) => {
       const terminalId = crypto.randomUUID();
-      const paneNum = assignPane(null, terminalId, "", cwd ?? null);
+      const paneNum = assignPane(null, terminalId, "", cwd ?? null, workspace?.id ?? null);
       if (paneNum === null) {
         console.warn("no idle terminal pane available");
       }
       return paneNum;
     },
-    [assignPane],
+    [assignPane, workspace],
   );
 
   const stopAgent = useCallback(

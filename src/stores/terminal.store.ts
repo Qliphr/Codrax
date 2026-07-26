@@ -8,12 +8,19 @@ export interface Pane {
   terminalId: string | null;
   initialCommand: string | null;
   cwd: string | null;
+  workspaceId: string | null;
 }
 
 interface TerminalState {
   panes: Pane[];
   /** `cardId` is null for a free-standing terminal not tied to any pipeline step. */
-  assignPane: (cardId: string | null, terminalId: string, initialCommand: string, cwd: string | null) => number | null;
+  assignPane: (
+    cardId: string | null,
+    terminalId: string,
+    initialCommand: string,
+    cwd: string | null,
+    workspaceId: string | null,
+  ) => number | null;
   freePane: (terminalId: string) => void;
   paneForCard: (cardId: string) => Pane | undefined;
 }
@@ -25,17 +32,20 @@ function emptyPanes(): Pane[] {
     terminalId: null,
     initialCommand: null,
     cwd: null,
+    workspaceId: null,
   }));
 }
 
 export const useTerminalStore = create<TerminalState>((set, get) => ({
   panes: emptyPanes(),
 
-  assignPane: (cardId, terminalId, initialCommand, cwd) => {
+  assignPane: (cardId, terminalId, initialCommand, cwd, workspaceId) => {
     const { panes } = get();
     const idleIdx = panes.findIndex((p) => p.terminalId === null);
     if (idleIdx === -1) return null;
-    const next = panes.map((p, i) => (i === idleIdx ? { ...p, cardId, terminalId, initialCommand, cwd } : p));
+    const next = panes.map((p, i) =>
+      i === idleIdx ? { ...p, cardId, terminalId, initialCommand, cwd, workspaceId } : p,
+    );
     set({ panes: next });
     return next[idleIdx].num;
   },
