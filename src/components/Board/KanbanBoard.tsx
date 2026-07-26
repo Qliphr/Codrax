@@ -4,6 +4,7 @@ import { COLORS, accentBorder, accentDim } from "@/lib/theme";
 import { COLUMN_LABELS, type Card, type ColumnKey } from "@/lib/types";
 import { KanbanColumn, type ColumnDef } from "./KanbanColumn";
 import { KanbanCard } from "./KanbanCard";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const COLUMN_DEFS: ColumnDef[] = [
   { key: "todo", name: COLUMN_LABELS.todo, dot: "#948B81" },
@@ -90,18 +91,18 @@ export function KanbanBoard({ cards, activeCount, onCreateTask, onMoveCard, onCa
           {cards.length} tasks · {activeCount} running
         </span>
         <div className="flex-1" />
-        <select
-          value={sortBy}
-          onChange={(e) => setSortBy(e.target.value as SortKey)}
-          className="vos-input w-[150px] py-1.5 font-sans text-[12px]"
-          title="Sort tasks"
-        >
-          {SORT_OPTIONS.map((opt) => (
-            <option key={opt.key} value={opt.key}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
+        <Select value={sortBy} onValueChange={(value) => setSortBy(value as SortKey)}>
+          <SelectTrigger className="w-[150px] py-1.5 font-sans text-[12px]" title="Sort tasks">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {SORT_OPTIONS.map((opt) => (
+              <SelectItem key={opt.key} value={opt.key}>
+                {opt.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         <button
           onClick={() => onCreateTask("todo")}
           className="flex items-center gap-1.5 rounded-md border px-3.5 py-2 font-sans text-[13px] font-medium"

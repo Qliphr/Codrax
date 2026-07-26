@@ -38,7 +38,6 @@ export default function App() {
     loadDemoWorkspaces,
     removeWorkspace,
     relocateWorkspace,
-    renameWorkspace,
   } = useWorkspaceStore();
   const { cards, hydrate: hydrateKanban, moveCard, addCard, deleteCard, setBaselinePaths, setPipelineStepState } = useKanbanStore();
   const workspace = workspaces.find((w) => w.id === activeWorkspaceId);
@@ -367,13 +366,6 @@ export default function App() {
         <Sidebar
           workspaces={workspaces}
           activeWorkspaceId={workspace.id}
-          workspaceCounts={workspaceCounts}
-          missingWorkspaceIds={missingWorkspaceIds}
-          onSelectWorkspace={setActiveWorkspaceId}
-          onAddWorkspace={() => void handleAddWorkspace()}
-          onRelocateWorkspace={(id) => void relocateWorkspace(id)}
-          onRemoveWorkspace={removeWorkspace}
-          onRenameWorkspace={renameWorkspace}
           view={view}
           onSetView={setView}
         />

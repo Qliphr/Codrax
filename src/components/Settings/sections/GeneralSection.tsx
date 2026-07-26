@@ -10,6 +10,8 @@ import {
   type Workspace,
 } from "@/lib/types";
 import { SettingRow } from "@/components/Settings/SettingRow";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface GeneralSectionProps {
   workspace: Workspace | undefined;
@@ -47,25 +49,28 @@ function TerminalSection() {
       <div className="flex flex-col gap-2">
         <SettingRow title="Shell" description="Binary spawned for new terminals — applies the next time one starts">
           <div className="flex flex-col items-end gap-2">
-            <select
-              className="vos-input w-[220px]"
-              value={customMode ? "__custom__" : (terminalShell ?? "")}
-              onChange={(e) => {
-                const value = e.target.value;
+            <Select
+              value={customMode ? "__custom__" : (terminalShell || "__default__")}
+              onValueChange={(value) => {
                 if (value === "__custom__") {
                   setCustomMode(true);
                   return;
                 }
                 setCustomMode(false);
-                setTerminalShell(value || undefined);
+                setTerminalShell(value === "__default__" ? undefined : value);
               }}
             >
-              {SHELL_PRESETS.map((p) => (
-                <option key={p.value || "default"} value={p.value}>
-                  {p.label}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger className="w-[220px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {SHELL_PRESETS.map((p) => (
+                  <SelectItem key={p.value || "__default__"} value={p.value || "__default__"}>
+                    {p.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             {customMode && (
               <input
                 className="vos-input w-[220px]"
@@ -101,17 +106,21 @@ function ModelPicker({
   return (
     <SettingRow title={label} description={description}>
       <div className="flex flex-col items-end gap-2">
-        <select
-          className="vos-input w-[220px]"
+        <Select
           value={preset}
-          onChange={(e) => onChange({ preset: e.target.value as AgentModelChoice["preset"], customCommand: customDraft })}
+          onValueChange={(value) => onChange({ preset: value as AgentModelChoice["preset"], customCommand: customDraft })}
         >
-          {AGENT_MODEL_PRESETS.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.label}
-            </option>
-          ))}
-        </select>
+          <SelectTrigger className="w-[220px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {AGENT_MODEL_PRESETS.map((p) => (
+              <SelectItem key={p.id} value={p.id}>
+                {p.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         {preset === "custom" && (
           <input
             className="vos-input w-[220px]"
@@ -157,12 +166,9 @@ function PipelineSection({ workspace }: { workspace: Workspace }) {
           onChange={setBuild}
         />
         <SettingRow title="Review step" description="Run a review agent when a task enters In Review — off skips straight to Done">
-          <input
-            type="checkbox"
-            className="size-4 accent-current"
-            style={{ color: COLORS.textPrimary }}
+          <Checkbox
             checked={reviewEnabled}
-            onChange={(e) => updateWorkspaceSettings(workspace.id, { reviewEnabled: e.target.checked })}
+            onCheckedChange={(checked) => updateWorkspaceSettings(workspace.id, { reviewEnabled: checked === true })}
           />
         </SettingRow>
         {reviewEnabled && (
@@ -249,12 +255,9 @@ export function GeneralSection({ workspace }: GeneralSectionProps) {
         </h3>
         <div className="flex flex-col gap-2">
           <SettingRow title="Show hidden files" description="Display dotfiles and dotfolders (e.g. .git, .env)">
-            <input
-              type="checkbox"
-              className="size-4 accent-current"
-              style={{ color: COLORS.textPrimary }}
+            <Checkbox
               checked={workspace.settings.showHiddenFiles ?? false}
-              onChange={(e) => updateWorkspaceSettings(workspace.id, { showHiddenFiles: e.target.checked })}
+              onCheckedChange={(checked) => updateWorkspaceSettings(workspace.id, { showHiddenFiles: checked === true })}
             />
           </SettingRow>
         </div>

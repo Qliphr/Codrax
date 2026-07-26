@@ -3,7 +3,6 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { GridViewIcon, ComputerTerminal01Icon } from "@hugeicons/core-free-icons";
 import { COLORS, accentDim } from "@/lib/theme";
 import type { Workspace } from "@/lib/types";
-import { WorkspaceList } from "./WorkspaceList";
 import { FileTree } from "./FileTree";
 import { GitGraph } from "./GitGraph";
 import { GitStatus } from "./GitStatus";
@@ -23,13 +22,6 @@ const FILE_TREE_DEFAULT_HEIGHT = 260;
 interface SidebarProps {
   workspaces: Workspace[];
   activeWorkspaceId: string;
-  workspaceCounts: Record<string, number>;
-  missingWorkspaceIds: Set<string>;
-  onSelectWorkspace: (id: string) => void;
-  onAddWorkspace: () => void;
-  onRelocateWorkspace: (id: string) => void;
-  onRemoveWorkspace: (id: string) => void;
-  onRenameWorkspace: (id: string, name: string) => void;
   view: BoardView;
   onSetView: (view: BoardView) => void;
 }
@@ -39,13 +31,6 @@ const navItemBase = "mb-0.5 flex items-center gap-2.5 rounded-lg px-3 py-2.5 tex
 export function Sidebar({
   workspaces,
   activeWorkspaceId,
-  workspaceCounts,
-  missingWorkspaceIds,
-  onSelectWorkspace,
-  onAddWorkspace,
-  onRelocateWorkspace,
-  onRemoveWorkspace,
-  onRenameWorkspace,
   view,
   onSetView,
 }: SidebarProps) {
@@ -122,19 +107,7 @@ export function Sidebar({
         style={{ transform: "translateX(50%)" }}
       />
 
-      <WorkspaceList
-        workspaces={workspaces}
-        activeId={activeWorkspaceId}
-        counts={workspaceCounts}
-        missingIds={missingWorkspaceIds}
-        onSelect={onSelectWorkspace}
-        onAdd={onAddWorkspace}
-        onRelocate={onRelocateWorkspace}
-        onRemove={onRemoveWorkspace}
-        onRename={onRenameWorkspace}
-      />
-
-      <div className="mt-1.5 border-t px-3 py-2" style={{ borderColor: COLORS.borderSubtle }}>
+      <div className="px-3 py-2" style={{ borderColor: COLORS.borderSubtle }}>
         <div
           onClick={() => onSetView("board")}
           className={navItemBase}
