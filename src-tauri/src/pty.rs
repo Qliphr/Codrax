@@ -8,6 +8,7 @@ use tauri::{AppHandle, Emitter, State};
 /// Hard cap on simultaneous PTYs, independent of Free/Pro tier — a system-level guard rail.
 const MAX_PTYS: usize = 8;
 /// Grace period between SIGTERM and the forceful SIGKILL fallback on Unix.
+#[cfg_attr(windows, allow(dead_code))]
 const KILL_GRACE: Duration = Duration::from_secs(5);
 
 struct PtySession {

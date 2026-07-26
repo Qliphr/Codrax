@@ -7,6 +7,7 @@ const ALLOWED_PLACEHOLDERS: [&str; 3] = ["task", "description", "prev_output"];
 /// Escapes a user-controlled value for safe interpolation into a POSIX shell command:
 /// wraps it in single quotes and escapes any single quote inside.
 /// "add 'dark' mode; rm -rf /" -> 'add '\''dark'\'' mode; rm -rf /'
+#[cfg_attr(windows, allow(dead_code))]
 pub fn shell_escape_posix(input: &str) -> String {
     format!("'{}'", input.replace('\'', r"'\''"))
 }

@@ -21,6 +21,12 @@ pub fn run() {
         .plugin(tauri_plugin_process::init())
         .manage(PtyRegistry::default())
         .manage(WatchRegistry::default())
+        .setup(|app| {
+            if let Some(window) = app.get_webview_window("main") {
+                let _ = window.maximize();
+            }
+            Ok(())
+        })
         .invoke_handler(tauri::generate_handler![
             storage::load_kanban,
             storage::save_kanban,
