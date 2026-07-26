@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { LayoutGrid, SquareTerminal } from "lucide-react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { GridViewIcon, ComputerTerminal01Icon } from "@hugeicons/core-free-icons";
 import { COLORS, accentDim } from "@/lib/theme";
 import type { Workspace } from "@/lib/types";
 import { WorkspaceList } from "./WorkspaceList";
@@ -143,7 +144,7 @@ export function Sidebar({
             boxShadow: view === "board" ? `inset 2px 0 0 ${COLORS.accent}` : undefined,
           }}
         >
-          <LayoutGrid size={16} className="w-[18px]" strokeWidth={2} />
+          <HugeiconsIcon icon={GridViewIcon} size={16} className="w-[18px]" strokeWidth={1.75} />
           <span>Board</span>
         </div>
         <div
@@ -155,7 +156,7 @@ export function Sidebar({
             boxShadow: view === "terminals" ? `inset 2px 0 0 ${COLORS.accent}` : undefined,
           }}
         >
-          <SquareTerminal size={16} className="w-[18px]" strokeWidth={2} />
+          <HugeiconsIcon icon={ComputerTerminal01Icon} size={16} className="w-[18px]" strokeWidth={1.75} />
           <span>Terminals</span>
         </div>
       </div>

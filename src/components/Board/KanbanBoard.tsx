@@ -14,6 +14,43 @@ const COLUMN_DEFS: ColumnDef[] = [
 
 const VALID_COLUMN_KEYS = new Set<string>(COLUMN_DEFS.map((c) => c.key));
 
+const SORT_OPTIONS = [
+  { key: "manual", label: "Manual order" },
+  { key: "priority", label: "Priority" },
+  { key: "title", label: "Title (A-Z)" },
+  { key: "newest", label: "Newest first" },
+  { key: "oldest", label: "Oldest first" },
+] as const;
+
+type SortKey = (typeof SORT_OPTIONS)[number]["key"];
+
+const PRIORITY_RANK: Record<Card["priority"], number> = { critical: 0, high: 1, medium: 2, low: 3 };
+
+function cardOrderNum(card: Card): number {
+  const n = Number(card.id.split("-").pop());
+  return Number.isFinite(n) ? n : 0;
+}
+
+function sortCards(cards: Card[], sortBy: SortKey): Card[] {
+  if (sortBy === "manual") return cards;
+  const sorted = [...cards];
+  switch (sortBy) {
+    case "priority":
+      sorted.sort((a, b) => PRIORITY_RANK[a.priority] - PRIORITY_RANK[b.priority]);
+      break;
+    case "title":
+      sorted.sort((a, b) => a.title.localeCompare(b.title));
+      break;
+    case "newest":
+      sorted.sort((a, b) => cardOrderNum(b) - cardOrderNum(a));
+      break;
+    case "oldest":
+      sorted.sort((a, b) => cardOrderNum(a) - cardOrderNum(b));
+      break;
+  }
+  return sorted;
+}
+
 interface KanbanBoardProps {
   cards: Card[];
   activeCount: number;
@@ -24,6 +61,7 @@ interface KanbanBoardProps {
 
 export function KanbanBoard({ cards, activeCount, onCreateTask, onMoveCard, onCardClick }: KanbanBoardProps) {
   const [draggingCard, setDraggingCard] = useState<Card | null>(null);
+  const [sortBy, setSortBy] = useState<SortKey>("manual");
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
 
   function handleDragStart(event: DragStartEvent) {
@@ -52,6 +90,18 @@ export function KanbanBoard({ cards, activeCount, onCreateTask, onMoveCard, onCa
           {cards.length} tasks · {activeCount} running
         </span>
         <div className="flex-1" />
+        <select
+          value={sortBy}
+          onChange={(e) => setSortBy(e.target.value as SortKey)}
+          className="vos-input w-[150px] py-1.5 font-sans text-[12px]"
+          title="Sort tasks"
+        >
+          {SORT_OPTIONS.map((opt) => (
+            <option key={opt.key} value={opt.key}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
         <button
           onClick={() => onCreateTask("todo")}
           className="flex items-center gap-1.5 rounded-md border px-3.5 py-2 font-sans text-[13px] font-medium"
@@ -67,7 +117,7 @@ export function KanbanBoard({ cards, activeCount, onCreateTask, onMoveCard, onCa
             <KanbanColumn
               key={col.key}
               column={col}
-              cards={cards.filter((c) => c.status === col.key)}
+              cards={sortCards(cards.filter((c) => c.status === col.key), sortBy)}
               onCreateTask={onCreateTask}
               onCardClick={onCardClick}
             />

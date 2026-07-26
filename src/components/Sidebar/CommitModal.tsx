@@ -110,8 +110,12 @@ export function CommitModal({ open, workspacePath, changes, onClose, onCommitted
                   <span className="w-3 flex-none text-center font-semibold" style={{ color: COLORS.textMuted }}>
                     {c.tag}
                   </span>
-                  <span className="overflow-hidden text-ellipsis whitespace-nowrap" style={{ color: COLORS.textSecondary }}>
-                    {c.path}
+                  <span
+                    className="overflow-hidden text-ellipsis whitespace-nowrap"
+                    style={{ color: COLORS.textSecondary }}
+                    title={c.path}
+                  >
+                    {c.path.split(/[\\/]/).pop()}
                   </span>
                 </div>
               ))}

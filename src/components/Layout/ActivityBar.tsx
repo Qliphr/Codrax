@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { COLORS } from "@/lib/theme";
-import { BellIcon, GearIcon, GridIcon, PanelIcon, WaveformIcon } from "@/lib/icons";
+import { BellIcon, GearIcon } from "@/lib/icons";
 
 interface IconButtonProps {
   children: ReactNode;
@@ -41,21 +41,11 @@ interface ActivityBarProps {
 export function ActivityBar({ onToggleNotifs, onOpenSettings, unreadCount }: ActivityBarProps) {
   return (
     <>
-      <IconButton>
-        <GridIcon />
-      </IconButton>
       <IconButton onClick={onToggleNotifs} badge={unreadCount}>
         <BellIcon />
       </IconButton>
-      <IconButton>
-        <WaveformIcon />
-      </IconButton>
       <IconButton onClick={onOpenSettings}>
         <GearIcon />
-      </IconButton>
-      <div className="h-[18px] w-px" style={{ background: "#3A3532" }} />
-      <IconButton>
-        <PanelIcon />
       </IconButton>
     </>
   );

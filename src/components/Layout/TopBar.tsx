@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { Minus, Square, Copy, X } from "lucide-react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { MinusSignIcon, SquareIcon, Copy01Icon, Cancel01Icon } from "@hugeicons/core-free-icons";
 import { COLORS, accentDim, accentGlow } from "@/lib/theme";
 import { ActivityBar } from "./ActivityBar";
 import type { Workspace } from "@/lib/types";
@@ -28,7 +29,7 @@ function WindowControls() {
         style={{ borderColor: COLORS.borderSubtle, boxShadow: "0 1px 2px rgba(0,0,0,.3)" }}
         title="Minimize"
       >
-        <Minus size={14} />
+        <HugeiconsIcon icon={MinusSignIcon} size={14} strokeWidth={1.75} />
       </button>
       <button
         onClick={async () => {
@@ -39,7 +40,11 @@ function WindowControls() {
         style={{ borderColor: COLORS.borderSubtle, boxShadow: "0 1px 2px rgba(0,0,0,.3)" }}
         title={maximized ? "Restore" : "Maximize"}
       >
-        {maximized ? <Copy size={12} /> : <Square size={12} />}
+        {maximized ? (
+          <HugeiconsIcon icon={Copy01Icon} size={12} strokeWidth={1.75} />
+        ) : (
+          <HugeiconsIcon icon={SquareIcon} size={12} strokeWidth={1.75} />
+        )}
       </button>
       <button
         onClick={() => appWindow.close()}
@@ -47,7 +52,7 @@ function WindowControls() {
         style={{ borderColor: COLORS.borderSubtle, boxShadow: "0 1px 2px rgba(0,0,0,.3)" }}
         title="Close"
       >
-        <X size={14} />
+        <HugeiconsIcon icon={Cancel01Icon} size={14} strokeWidth={1.75} />
       </button>
     </div>
   );

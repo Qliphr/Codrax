@@ -15,13 +15,20 @@ interface GeneralSectionProps {
   workspace: Workspace | undefined;
 }
 
+const isWindowsOS = typeof navigator !== "undefined" && /win/i.test(navigator.platform);
+
 const SHELL_PRESETS = [
   { label: "System default", value: "" },
-  { label: "zsh", value: "zsh" },
-  { label: "bash", value: "bash" },
-  { label: "fish", value: "fish" },
-  { label: "PowerShell (Windows)", value: "powershell.exe" },
-  { label: "Command Prompt (Windows)", value: "cmd.exe" },
+  ...(isWindowsOS
+    ? [
+        { label: "PowerShell (Windows)", value: "powershell.exe" },
+        { label: "Command Prompt (Windows)", value: "cmd.exe" },
+      ]
+    : [
+        { label: "zsh", value: "zsh" },
+        { label: "bash", value: "bash" },
+        { label: "fish", value: "fish" },
+      ]),
   { label: "Custom…", value: "__custom__" },
 ];
 
